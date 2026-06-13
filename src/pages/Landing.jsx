@@ -3,6 +3,7 @@ import { ArrowRight, ShieldCheck, Sparkles } from 'lucide-react';
 import LandingNavbar from '../components/landing/LandingNavbar';
 import HeroSection from '../components/landing/HeroSection';
 import FeatureSection from '../components/landing/FeatureSection';
+import ProductShowcase from '../components/landing/ProductShowcase';
 import ScrollSection from '../components/landing/ScrollSection';
 import ParticleBackground from '../components/landing/ParticleBackground';
 import Footer from '../components/landing/Footer';
@@ -38,6 +39,10 @@ export default function Landing({ onEnterDashboard }) {
               </div>
             </div>
             <FeatureSection />
+          </section>
+
+          <section id="showcase" className="mt-12">
+            <ProductShowcase />
           </section>
 
           <section id="workflow" className="mt-12">
