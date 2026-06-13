@@ -5,8 +5,10 @@ import { invokeGemini } from '../lib/invokeGemini';
 import { useAuth } from '../context/AuthContext';
 import { buildPlanningMemoPrompt } from '../lib/auditPrompts';
 
-function stripCodeFences(text = '') {
-  return text.replace(/```json|```/gi, '').trim();
+function normalizeKeyRisks(val) {
+  if (Array.isArray(val)) return val;
+  if (typeof val === 'string') return val.split(',').map(s => s.trim());
+  return [];
 }
 
 export default function PlanningMemo({ activeProject = null }) {
@@ -34,6 +36,10 @@ export default function PlanningMemo({ activeProject = null }) {
         projectContext: activeProject || null,
         additionalData: { clientBackground, auditType, industry, keyRisks, financialRedFlags, internalControlConcerns },
       });
+      if (!result) {
+        throw new Error('The AI service returned an empty response. Please try again.');
+      }
+
       setResult(result);
       if (user?.id) {
         const { error: saveError } = await supabase.from('planning_memos').insert([{
@@ -41,7 +47,7 @@ export default function PlanningMemo({ activeProject = null }) {
           project_id: activeProject?.id ?? null,
           client_background: result.clientBackground,
           audit_scope: result.auditScope,
-          key_risks: result.keyRisks,
+          key_risks: normalizeKeyRisks(result.keyRisks),
           materiality_considerations: result.materialityConsiderations,
           audit_strategy: result.auditStrategy,
           team_planning_notes: result.teamPlanningNotes,

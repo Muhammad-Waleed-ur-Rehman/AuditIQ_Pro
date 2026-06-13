@@ -29,11 +29,13 @@ import {
 import { validateCSVColumns, analyzeFinancialData } from '../lib/financialRatios';
 import { isSupabaseConfigured, supabase, getSupabaseErrorMessage } from '../lib/supabaseClient';
 import { invokeGemini } from '../lib/invokeGemini';
+import { useAuth } from '../context/AuthContext';
 import { buildRedFlagExplanationPrompt } from '../lib/auditPrompts';
 import LoadingSpinner from './LoadingSpinner';
 import AlertMessage from './AlertMessage';
 
 export default function FinancialAnalyzer() {
+  const { user } = useAuth();
   const [fileName, setFileName] = useState(null);
   const [dataset, setDataset] = useState(null); // Analyzed rows array
   const [selectedYear, setSelectedYear] = useState('');
@@ -57,9 +59,18 @@ export default function FinancialAnalyzer() {
         throw new Error('No valid financial entries found in dataset.');
       }
       setDataset(analyzed);
-      // Select the latest year by default
       setSelectedYear(analyzed[analyzed.length - 1].year.toString());
       setErrorMsg(null);
+
+      if (isSupabaseConfigured && supabase && user?.id) {
+        supabase.from('financial_analyses').insert([{
+          user_id: user.id,
+          ratios: analyzed[analyzed.length - 1]?.ratios || null,
+          red_flags: analyzed[analyzed.length - 1]?.redFlags || null,
+        }]).then(({ error }) => {
+          if (error) console.warn('Failed to save financial analysis:', error.message);
+        });
+      }
     } catch (err) {
       setErrorMsg(err.message || 'Error processing financial data ratios.');
       setDataset(null);

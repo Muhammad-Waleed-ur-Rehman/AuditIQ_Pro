@@ -54,7 +54,11 @@ export default function PromptLibrary() {
 
   const deletePrompt = async (id) => {
     if (!supabase) return;
-    await supabase.from('prompt_library').delete().eq('id', id);
+    const { error } = await supabase.from('prompt_library').delete().eq('id', id);
+    if (error) {
+      setError(getSupabaseErrorMessage(error) || 'Unable to delete the prompt.');
+      return;
+    }
     await fetchPrompts();
   };
 

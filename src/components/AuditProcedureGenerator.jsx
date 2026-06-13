@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
 import { generateAuditProgram } from '../lib/auditEngine';
-import { isSupabaseConfigured, supabase } from '../lib/supabaseClient';
+import { isSupabaseConfigured, supabase, getSupabaseErrorMessage } from '../lib/supabaseClient';
 import { invokeGemini } from '../lib/invokeGemini';
+import { useAuth } from '../context/AuthContext';
 import { ClipboardCheck, Sparkles, CheckSquare, Square, RefreshCw } from 'lucide-react';
 import LoadingSpinner from './LoadingSpinner';
 import AlertMessage from './AlertMessage';
 
 export default function AuditProcedureGenerator({ activeProject = null }) {
+  const { user } = useAuth();
   const [area, setArea] = useState('Cash');
   const [assertions, setAssertions] = useState(['Existence', 'Completeness']);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -92,6 +94,21 @@ export default function AuditProcedureGenerator({ activeProject = null }) {
           samplingApproach: parsed.samplingApproach || 'Judgmental sampling tailored to the selected assertions.',
         });
         setStatusMessage('Audit procedure set generated with Gemini.');
+
+        if (activeProject && supabase && user?.id) {
+          const { error: saveError } = await supabase.from('audit_procedures').insert([{
+            user_id: user.id,
+            project_id: activeProject.id,
+            audit_area: area,
+            assertions: assertions,
+            procedures: steps.map(s => s.procedure),
+            evidence_required: steps.map(s => s.evidenceRequired),
+            sampling_approach: parsed.samplingApproach || 'Judgmental',
+          }]);
+          if (saveError) {
+            console.warn('Failed to save audit procedure:', saveError);
+          }
+        }
       } else {
         const output = generateAuditProgram(area, assertions);
         setProgram(output);

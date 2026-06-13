@@ -5,10 +5,6 @@ import { invokeGemini } from '../lib/invokeGemini';
 import { useAuth } from '../context/AuthContext';
 import { buildManagementLetterPrompt } from '../lib/auditPrompts';
 
-function stripCodeFences(text = '') {
-  return text.replace(/```json|```/gi, '').trim();
-}
-
 export default function ManagementLetters({ activeProject = null }) {
   const { user } = useAuth();
   const [observation, setObservation] = useState('Purchase approvals were not consistently documented for unusual transactions.');
@@ -37,6 +33,10 @@ export default function ManagementLetters({ activeProject = null }) {
         projectContext: activeProject || null,
         additionalData: { observation },
       });
+
+      if (!result) {
+        throw new Error('The AI service returned an empty response. Please try again.');
+      }
 
       setResult(result);
 

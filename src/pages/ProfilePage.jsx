@@ -4,7 +4,7 @@ import {
   Phone, MapPin, Award, BookOpen, KeyRound, Eye, EyeOff, Briefcase
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { supabase, getSupabaseErrorMessage } from '../lib/supabaseClient';
+import { supabase, isSupabaseConfigured, getSupabaseErrorMessage } from '../lib/supabaseClient';
 
 export default function ProfilePage() {
   const { user, profile, loading, updateProfile } = useAuth();
@@ -54,6 +54,12 @@ export default function ProfilePage() {
     if (!newPassword) { setPwError('New password is required.'); return; }
     if (newPassword.length < 6) { setPwError('Password must be at least 6 characters.'); return; }
     if (newPassword !== confirmPassword) { setPwError('Passwords do not match.'); return; }
+    if (!isSupabaseConfigured || !supabase) {
+      setPwError('Supabase is not configured. Cannot change password.');
+      setSavingPw(false);
+      return;
+    }
+
     setSavingPw(true);
     try {
       const { error: signInErr } = await supabase.auth.signInWithPassword({

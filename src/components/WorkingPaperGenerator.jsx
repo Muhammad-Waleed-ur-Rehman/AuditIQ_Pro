@@ -86,7 +86,9 @@ export default function WorkingPaperGenerator({ activeProject = null, onWpGenera
         };
 
         setWp(generatedPaper);
-        setStatusMessage('Working paper generated with Gemini and linked to your active project.');
+        setStatusMessage(activeProject
+          ? 'Working paper generated with Gemini and linked to your active project.'
+          : 'Working paper generated with Gemini (not linked to a project).');
 
         if (activeProject && supabase && user?.id) {
           const { error: saveError } = await supabase.from('working_papers').insert([
