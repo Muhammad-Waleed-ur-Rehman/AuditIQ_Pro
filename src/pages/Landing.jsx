@@ -6,6 +6,7 @@ import FeatureSection from '../components/landing/FeatureSection';
 import ProductShowcase from '../components/landing/ProductShowcase';
 import HowItWorks from '../components/landing/HowItWorks';
 import ProblemSolution from '../components/landing/ProblemSolution';
+import AIFeaturesShowcase from '../components/landing/AIFeaturesShowcase';
 import ParticleBackground from '../components/landing/ParticleBackground';
 import Footer from '../components/landing/Footer';
 import { useLenis } from '../hooks/useLenis';
@@ -52,6 +53,10 @@ export default function Landing({ onEnterDashboard }) {
 
           <section id="comparison" className="mt-12">
             <ProblemSolution />
+          </section>
+
+          <section id="ai-features" className="mt-12">
+            <AIFeaturesShowcase />
           </section>
 
           <section id="ai-copilot" className="mt-12 rounded-[32px] border border-white/10 bg-gradient-to-r from-cyan-500/10 via-slate-900 to-indigo-500/10 p-6 shadow-2xl shadow-cyan-950/30 backdrop-blur-xl md:p-10" data-reveal>
