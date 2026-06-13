@@ -13,9 +13,12 @@ export default function LandingNavbar({ onEnterDashboard }) {
           </span>
         </a>
 
-        <div className="hidden items-center gap-8 text-sm text-slate-200 md:flex">
+        <div className="hidden items-center gap-6 text-sm text-slate-200 md:flex">
           <a href="#features" className="transition hover:text-cyan-200">Features</a>
+          <a href="#showcase" className="transition hover:text-cyan-200">Products</a>
           <a href="#workflow" className="transition hover:text-cyan-200">Workflow</a>
+          <a href="#ai-features" className="transition hover:text-cyan-200">AI Capabilities</a>
+          <a href="#faq" className="transition hover:text-cyan-200">FAQs</a>
           <a href="#ai-copilot" className="transition hover:text-cyan-200">AI Copilot</a>
           <Link to="/login" className="rounded-full border border-white/10 bg-white/6 px-4 py-2 text-white transition hover:border-cyan-400/40 hover:bg-cyan-400/10">Login</Link>
         </div>
