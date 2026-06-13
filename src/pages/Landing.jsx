@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { ArrowRight, ShieldCheck, Sparkles } from 'lucide-react';
 import LandingNavbar from '../components/landing/LandingNavbar';
 import HeroSection from '../components/landing/HeroSection';
+import RealProductPreview from '../components/landing/RealProductPreview';
 import FeatureSection from '../components/landing/FeatureSection';
 import ProductShowcase from '../components/landing/ProductShowcase';
 import HowItWorks from '../components/landing/HowItWorks';
@@ -29,6 +30,10 @@ export default function Landing({ onEnterDashboard }) {
 
         <main className="mx-auto flex w-full max-w-7xl flex-col px-4 pb-16 pt-24 sm:px-6 lg:px-8">
           <HeroSection onEnterDashboard={onEnterDashboard} />
+
+          <section id="real-preview" className="mt-12">
+            <RealProductPreview />
+          </section>
 
           <section id="features" className="mt-12 rounded-[32px] border border-white/10 bg-white/6 p-6 shadow-2xl shadow-cyan-950/30 backdrop-blur-xl md:p-10">
             <div className="mb-8 flex flex-wrap items-end justify-between gap-4" data-reveal>
