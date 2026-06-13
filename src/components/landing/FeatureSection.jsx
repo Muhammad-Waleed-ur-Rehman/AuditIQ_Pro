@@ -1,4 +1,4 @@
-import { Bot, FileText, Landmark, ShieldCheck, Workflow } from 'lucide-react';
+import { Bot, FileText, Landmark, ShieldCheck, Workflow, PenSquare, BookOpen } from 'lucide-react';
 
 const featureCards = [
   {
@@ -24,6 +24,18 @@ const featureCards = [
     description: 'Create tailored procedure maps, assertion coverage, and evidence guidance by engagement area.',
     icon: Workflow,
     accent: 'from-amber-400/10 to-orange-500/10'
+  },
+  {
+    title: 'Management Letter Generator',
+    description: 'Turn control weaknesses into professional management letter drafts with AI-powered recommendations.',
+    icon: PenSquare,
+    accent: 'from-rose-400/10 to-pink-500/10'
+  },
+  {
+    title: 'Planning Memo Assistant',
+    description: 'Build engagement planning memos reflecting client background, financial risks, and audit strategy.',
+    icon: BookOpen,
+    accent: 'from-teal-400/10 to-emerald-500/10'
   },
   {
     title: 'AI Audit Copilot',
