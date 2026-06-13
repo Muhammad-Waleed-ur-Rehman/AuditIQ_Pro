@@ -7,6 +7,7 @@ import FeatureSection from '../components/landing/FeatureSection';
 import ProductShowcase from '../components/landing/ProductShowcase';
 import HowItWorks from '../components/landing/HowItWorks';
 import ProblemSolution from '../components/landing/ProblemSolution';
+import WhoItsFor from '../components/landing/WhoItsFor';
 import AIFeaturesShowcase from '../components/landing/AIFeaturesShowcase';
 import FAQSection from '../components/landing/FAQSection';
 import ParticleBackground from '../components/landing/ParticleBackground';
@@ -59,6 +60,10 @@ export default function Landing({ onEnterDashboard }) {
 
           <section id="comparison" className="mt-12">
             <ProblemSolution />
+          </section>
+
+          <section id="audience" className="mt-12">
+            <WhoItsFor />
           </section>
 
           <section id="ai-features" className="mt-12">
