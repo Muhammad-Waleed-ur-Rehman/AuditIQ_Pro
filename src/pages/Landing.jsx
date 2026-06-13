@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { ArrowRight, ShieldCheck, Sparkles } from 'lucide-react';
+import { Sparkles } from 'lucide-react';
 import LandingNavbar from '../components/landing/LandingNavbar';
 import HeroSection from '../components/landing/HeroSection';
 import RealProductPreview from '../components/landing/RealProductPreview';
@@ -9,6 +9,7 @@ import HowItWorks from '../components/landing/HowItWorks';
 import ProblemSolution from '../components/landing/ProblemSolution';
 import WhoItsFor from '../components/landing/WhoItsFor';
 import AIFeaturesShowcase from '../components/landing/AIFeaturesShowcase';
+import AICopilotDemo from '../components/landing/AICopilotDemo';
 import FAQSection from '../components/landing/FAQSection';
 import ParticleBackground from '../components/landing/ParticleBackground';
 import Footer from '../components/landing/Footer';
@@ -70,33 +71,8 @@ export default function Landing({ onEnterDashboard }) {
             <AIFeaturesShowcase />
           </section>
 
-          <section id="ai-copilot" className="mt-12 rounded-[32px] border border-white/10 bg-gradient-to-r from-cyan-500/10 via-slate-900 to-indigo-500/10 p-6 shadow-2xl shadow-cyan-950/30 backdrop-blur-xl md:p-10" data-reveal>
-            <div className="grid gap-8 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
-              <div>
-                <p className="text-sm uppercase tracking-[0.35em] text-cyan-200/80">AI Copilot</p>
-                <h2 className="mt-4 text-3xl font-semibold text-white md:text-4xl">Ask questions, surface findings, and draft next steps with confidence.</h2>
-                <p className="mt-4 max-w-xl text-slate-200/90">The landing page is intentionally separate from the protected dashboard so teams can preview the product experience without disturbing the operational workspace.</p>
-              </div>
-              <div className="rounded-[28px] border border-white/10 bg-slate-950/80 p-6 shadow-2xl shadow-black/30">
-                <div className="flex items-center gap-3 text-cyan-100">
-                  <ShieldCheck className="h-5 w-5" />
-                  <span className="text-sm uppercase tracking-[0.35em]">Assurance-ready</span>
-                </div>
-                <ul className="mt-6 space-y-4 text-sm text-slate-200">
-                  <li className="rounded-2xl border border-white/8 bg-white/5 p-4">AI-generated suggestions stay in the preview experience during this iteration.</li>
-                  <li className="rounded-2xl border border-white/8 bg-white/5 p-4">The protected dashboard remains available through the “Launch Audit Console” action.</li>
-                  <li className="rounded-2xl border border-white/8 bg-white/5 p-4">Lenis, GSAP, and Three.js are mounted only on this landing surface.</li>
-                </ul>
-                <button
-                  onClick={onEnterDashboard}
-                  className="mt-6 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-cyan-400 to-blue-500 px-5 py-3 text-sm font-semibold text-slate-950 shadow-lg shadow-cyan-400/20 transition hover:scale-[1.02] hover:shadow-cyan-400/30"
-                  type="button"
-                >
-                  Launch Audit Console
-                  <ArrowRight className="h-4 w-4" />
-                </button>
-              </div>
-            </div>
+          <section id="ai-copilot" className="mt-12">
+            <AICopilotDemo />
           </section>
         </main>
 
