@@ -7,6 +7,7 @@ import ProductShowcase from '../components/landing/ProductShowcase';
 import HowItWorks from '../components/landing/HowItWorks';
 import ProblemSolution from '../components/landing/ProblemSolution';
 import AIFeaturesShowcase from '../components/landing/AIFeaturesShowcase';
+import FAQSection from '../components/landing/FAQSection';
 import ParticleBackground from '../components/landing/ParticleBackground';
 import Footer from '../components/landing/Footer';
 import { useLenis } from '../hooks/useLenis';
@@ -88,6 +89,10 @@ export default function Landing({ onEnterDashboard }) {
             </div>
           </section>
         </main>
+
+        <section id="faq" className="mx-auto w-full max-w-7xl px-4 pb-16 sm:px-6 lg:px-8">
+          <FAQSection />
+        </section>
 
         <Footer />
       </div>
