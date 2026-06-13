@@ -19,6 +19,7 @@ const previews = [
     gradient: 'from-violet-600/30 via-purple-600/20 to-pink-600/30',
     gradientBg: 'from-violet-500/15 via-purple-500/10 to-pink-500/15',
     accent: 'border-violet-400/30 bg-violet-400/10 text-violet-200',
+    image: '/screenshots/Audit projects.png',
   },
   {
     title: 'Risk Assessment',
@@ -26,6 +27,7 @@ const previews = [
     gradient: 'from-emerald-600/30 via-teal-600/20 to-cyan-600/30',
     gradientBg: 'from-emerald-500/15 via-teal-500/10 to-cyan-500/15',
     accent: 'border-emerald-400/30 bg-emerald-400/10 text-emerald-200',
+    image: '/screenshots/risk assessment.png',
   },
   {
     title: 'Financial Analyzer',
@@ -33,6 +35,7 @@ const previews = [
     gradient: 'from-rose-600/30 via-orange-600/20 to-amber-600/30',
     gradientBg: 'from-rose-500/15 via-orange-500/10 to-amber-500/15',
     accent: 'border-rose-400/30 bg-rose-400/10 text-rose-200',
+    image: '/screenshots/Financial analyser 1.png',
   },
   {
     title: 'AI Copilot',
@@ -40,6 +43,7 @@ const previews = [
     gradient: 'from-sky-600/30 via-blue-600/20 to-indigo-600/30',
     gradientBg: 'from-sky-500/15 via-blue-500/10 to-indigo-500/15',
     accent: 'border-sky-400/30 bg-sky-400/10 text-sky-200',
+    image: '/screenshots/AI copilot.png',
   },
   {
     title: 'Planning Memo Generator',
@@ -47,12 +51,69 @@ const previews = [
     gradient: 'from-teal-600/30 via-cyan-600/20 to-blue-600/30',
     gradientBg: 'from-teal-500/15 via-cyan-500/10 to-blue-500/15',
     accent: 'border-teal-400/30 bg-teal-400/10 text-teal-200',
+    image: '/screenshots/Planning memo.png',
   },
 ];
 
 function Skeleton() {
   return (
     <div className="absolute inset-0 animate-pulse rounded-xl bg-white/5" />
+  );
+}
+
+function MediaContent({ preview }) {
+  const [loaded, setLoaded] = useState(false);
+  const [error, setError] = useState(false);
+
+  if (preview.image && !error) {
+    return (
+      <div className="relative h-full w-full">
+        {!loaded && <Skeleton />}
+        <img
+          src={preview.image}
+          alt={preview.title}
+          className={`h-full w-full rounded-xl object-cover transition-opacity duration-500 ${loaded ? 'opacity-100' : 'opacity-0'}`}
+          onLoad={() => setLoaded(true)}
+          onError={() => setError(true)}
+          loading="lazy"
+        />
+      </div>
+    );
+  }
+
+  return <PlaceholderImage gradient={preview.gradient} gradientBg={preview.gradientBg} />;
+}
+
+function ModalMedia({ preview }) {
+  const [loaded, setLoaded] = useState(false);
+  const [error, setError] = useState(false);
+
+  if (preview.image && !error) {
+    return (
+      <div className="relative aspect-video w-full rounded-xl bg-slate-800 flex items-center justify-center">
+        {!loaded && <Skeleton />}
+        <img
+          src={preview.image}
+          alt={preview.title}
+          className={`max-h-full max-w-full rounded-xl object-contain transition-opacity duration-500 ${loaded ? 'opacity-100' : 'opacity-0'}`}
+          onLoad={() => setLoaded(true)}
+          onError={() => setError(true)}
+        />
+      </div>
+    );
+  }
+
+  return (
+    <div className={`aspect-video w-full rounded-xl bg-gradient-to-br ${preview.gradientBg} flex items-center justify-center`}>
+      <div className="flex flex-col items-center gap-3">
+        <div className={`flex h-20 w-20 items-center justify-center rounded-2xl border bg-white/5 backdrop-blur-sm ${preview.gradient}`}>
+          <Camera className="h-9 w-9 text-white/60" />
+        </div>
+        <span className="rounded-full border border-white/10 bg-white/5 px-4 py-1.5 text-xs uppercase tracking-wider text-slate-400/80">
+          Screenshot Coming Soon
+        </span>
+      </div>
+    </div>
   );
 }
 
@@ -96,7 +157,7 @@ function PreviewModal({ preview, onClose }) {
       onClick={onClose}
     >
       <div
-        className="relative w-full max-w-4xl rounded-2xl border border-white/10 bg-slate-900 shadow-2xl shadow-black/50"
+        className="relative w-full max-w-5xl rounded-2xl border border-white/10 bg-slate-900 shadow-2xl shadow-black/50"
         onClick={(e) => e.stopPropagation()}
       >
         <button
@@ -108,16 +169,7 @@ function PreviewModal({ preview, onClose }) {
         </button>
 
         <div className="p-1">
-          <div className={`aspect-video w-full rounded-xl bg-gradient-to-br ${preview.gradientBg} flex items-center justify-center`}>
-            <div className={`flex flex-col items-center gap-3`}>
-              <div className={`flex h-20 w-20 items-center justify-center rounded-2xl border bg-white/5 backdrop-blur-sm ${preview.gradient}`}>
-                <Camera className="h-9 w-9 text-white/60" />
-              </div>
-              <span className="rounded-full border border-white/10 bg-white/5 px-4 py-1.5 text-xs uppercase tracking-wider text-slate-400/80">
-                Screenshot Coming Soon
-              </span>
-            </div>
-          </div>
+          <ModalMedia preview={preview} />
         </div>
 
         <div className="px-6 py-4 border-t border-white/8">
@@ -162,18 +214,15 @@ function PreviewCard({ preview, index }) {
         className="group cursor-pointer rounded-2xl border border-white/10 bg-slate-900/50 p-3 shadow-lg shadow-black/20 backdrop-blur-sm transition-all duration-500 hover:-translate-y-1.5 hover:border-cyan-400/30 hover:shadow-xl hover:shadow-cyan-400/5"
         onClick={() => setModalOpen(true)}
       >
-        {/* Image container */}
         <div className="relative aspect-video w-full overflow-hidden rounded-xl">
-          <PlaceholderImage gradient={preview.gradient} gradientBg={preview.gradientBg} />
+          <MediaContent preview={preview} />
 
-          {/* Hover overlay */}
           <div className="absolute inset-0 flex items-center justify-center gap-2 bg-black/40 opacity-0 transition-opacity duration-300 group-hover:opacity-100 rounded-xl">
             <Maximize2 className="h-5 w-5 text-white" />
             <span className="text-xs font-medium text-white">Preview</span>
           </div>
         </div>
 
-        {/* Card footer */}
         <div className="mt-3 px-1">
           <div className="flex items-center justify-between gap-2">
             <h3 className="text-sm font-semibold text-white">{preview.title}</h3>
