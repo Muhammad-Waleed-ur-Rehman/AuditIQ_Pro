@@ -5,6 +5,7 @@ import HeroSection from '../components/landing/HeroSection';
 import FeatureSection from '../components/landing/FeatureSection';
 import ScrollSection from '../components/landing/ScrollSection';
 import ParticleBackground from '../components/landing/ParticleBackground';
+import Footer from '../components/landing/Footer';
 import { useLenis } from '../hooks/useLenis';
 import { initLandingAnimations } from '../lib/animations';
 
@@ -72,6 +73,8 @@ export default function Landing({ onEnterDashboard }) {
             </div>
           </section>
         </main>
+
+        <Footer />
       </div>
     </div>
   );
