@@ -1,5 +1,7 @@
 # AuditIQ Pro
 
+**Live demo**: [https://auditiq-pro.vercel.app](https://auditiq-pro.vercel.app)
+
 AuditIQ Pro is a React + Vite audit productivity platform for internal and external audit teams. It combines an immersive public landing page, protected dashboard workflows, Supabase-backed storage, AI-assisted audit features, and ISA 315-inspired risk assessment tools.
 
 ## What this project includes
