@@ -950,60 +950,61 @@ export default function Dashboard({
           <span className="text-xs text-slate-400 italic">{riskAssessments.length} assessments</span>
         </div>
 
-        {riskAssessments.length === 0 ? (
-          <div className="py-10 text-center text-xs text-slate-400">
-            <Target className="h-8 w-8 text-slate-300 mx-auto mb-2" />
-            <p>No risk assessments found. Run a risk assessment from the Risk Assessment page to populate this view.</p>
-            <button
-              onClick={() => onNavigate('risk-assessment')}
-              className="mt-3 rounded-xl bg-brand-600 px-4 py-2 text-xs font-semibold text-white hover:bg-brand-700 transition-colors"
-            >
-              Create Risk Assessment
-            </button>
-          </div>
-        ) : (
-          <div className="mt-6 space-y-6">
-            <div className="grid gap-6 lg:grid-cols-2">
-              <div>
-                <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider mb-3">Inherent Risk Matrix (Likelihood × Magnitude)</h4>
-                <div className="overflow-x-auto">
-                  <div className="grid grid-cols-[auto_repeat(5,minmax(0,1fr))] gap-1 min-w-[400px]">
-                    <div className="col-span-1" />
-                    {MAGNITUDE_LABELS.map((label, i) => (
-                      <div key={label} className="text-center text-[8px] font-semibold text-slate-400 pb-1">
-                        <span>{i + 1}</span>
-                        <span className="block">{label}</span>
+        <div className="mt-6 space-y-6">
+          <div className="grid gap-6 lg:grid-cols-2">
+            <div>
+              <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider mb-3">Inherent Risk Matrix (Likelihood × Magnitude)</h4>
+              <div className="overflow-x-auto">
+                <div className="grid grid-cols-[auto_repeat(5,minmax(0,1fr))] gap-1 min-w-[400px]">
+                  <div className="col-span-1" />
+                  {MAGNITUDE_LABELS.map((label, i) => (
+                    <div key={label} className="text-center text-[8px] font-semibold text-slate-400 pb-1">
+                      <span>{i + 1}</span>
+                      <span className="block">{label}</span>
+                    </div>
+                  ))}
+                  {heatmapGrid.map((row, likIdx) => (
+                    <React.Fragment key={likIdx}>
+                      <div className="flex items-center justify-end pr-1.5 text-[8px] font-semibold text-slate-400">
+                        <span className="text-right">
+                          <span>{5 - likIdx}</span>
+                          <span className="block">{LIKELIHOOD_LABELS[4 - likIdx]}</span>
+                        </span>
                       </div>
-                    ))}
-                    {heatmapGrid.map((row, likIdx) => (
-                      <React.Fragment key={likIdx}>
-                        <div className="flex items-center justify-end pr-1.5 text-[8px] font-semibold text-slate-400">
-                          <span className="text-right">
-                            <span>{5 - likIdx}</span>
-                            <span className="block">{LIKELIHOOD_LABELS[4 - likIdx]}</span>
-                          </span>
+                      {row.map((cell, magIdx) => (
+                        <div
+                          key={`${likIdx}-${magIdx}`}
+                          className={`rounded-lg border ${cell.color.bg} p-1.5 text-center min-h-[52px] flex flex-col items-center justify-center gap-0.5 transition-all hover:shadow-sm`}
+                        >
+                          <span className={`text-[8px] font-bold ${cell.color.badge}`}>{cell.level}</span>
+                          {cell.assessments.length > 0 && (
+                            <span className="text-[9px] font-bold text-slate-700">{cell.assessments.length}</span>
+                          )}
                         </div>
-                        {row.map((cell, magIdx) => (
-                          <div
-                            key={`${likIdx}-${magIdx}`}
-                            className={`rounded-lg border ${cell.color.bg} p-1.5 text-center min-h-[52px] flex flex-col items-center justify-center gap-0.5 transition-all hover:shadow-sm`}
-                          >
-                            <span className={`text-[8px] font-bold ${cell.color.badge}`}>{cell.level}</span>
-                            {cell.assessments.length > 0 && (
-                              <span className="text-[9px] font-bold text-slate-700">{cell.assessments.length}</span>
-                            )}
-                          </div>
-                        ))}
-                      </React.Fragment>
-                    ))}
-                    <div className="col-span-1" />
-                    {['Mag 1', 'Mag 2', 'Mag 3', 'Mag 4', 'Mag 5'].map((l, i) => (
-                      <div key={l} className="text-center text-[7px] text-slate-400 pt-0.5">{l}</div>
-                    ))}
-                  </div>
+                      ))}
+                    </React.Fragment>
+                  ))}
+                  <div className="col-span-1" />
+                  {['Mag 1', 'Mag 2', 'Mag 3', 'Mag 4', 'Mag 5'].map((l, i) => (
+                    <div key={l} className="text-center text-[7px] text-slate-400 pt-0.5">{l}</div>
+                  ))}
                 </div>
               </div>
+              {riskAssessments.length === 0 && (
+                <div className="mt-4 flex items-center justify-center gap-2 text-xs text-slate-400">
+                  <Target className="h-4 w-4" />
+                  <p>No risk assessments yet.</p>
+                  <button
+                    onClick={() => onNavigate('risk-assessment')}
+                    className="ml-1 rounded-lg bg-brand-600 px-3 py-1 text-[10px] font-semibold text-white hover:bg-brand-700 transition-colors"
+                  >
+                    Create Risk Assessment
+                  </button>
+                </div>
+              )}
+            </div>
 
+            {riskAssessments.length > 0 && (
               <div>
                 <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider mb-3">Control Risk Assessment</h4>
                 <div className="space-y-2">
@@ -1047,8 +1048,10 @@ export default function Dashboard({
                   )}
                 </div>
               </div>
-            </div>
+            )}
+          </div>
 
+          {riskAssessments.length > 0 && (
             <div className="border-t border-slate-100 pt-4">
               <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider mb-3">Combined Risk Summary</h4>
               <div className="overflow-x-auto">
@@ -1108,8 +1111,8 @@ export default function Dashboard({
                 </table>
               </div>
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
       {/* Debug Panel */}
