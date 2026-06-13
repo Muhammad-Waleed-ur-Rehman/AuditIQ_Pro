@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { Camera, X, Maximize2 } from 'lucide-react';
@@ -12,6 +12,7 @@ const previews = [
     gradient: 'from-cyan-600/30 via-blue-600/20 to-indigo-600/30',
     gradientBg: 'from-cyan-500/15 via-blue-500/10 to-indigo-500/15',
     accent: 'border-cyan-400/30 bg-cyan-400/10 text-cyan-200',
+    image: '/screenshots/dashboard.png',
   },
   {
     title: 'Audit Projects',
@@ -35,7 +36,7 @@ const previews = [
     gradient: 'from-rose-600/30 via-orange-600/20 to-amber-600/30',
     gradientBg: 'from-rose-500/15 via-orange-500/10 to-amber-500/15',
     accent: 'border-rose-400/30 bg-rose-400/10 text-rose-200',
-    image: '/screenshots/Financial analyser 1.png',
+    images: ['/screenshots/Financial analyser 1.png', '/screenshots/Financial analyser 2.png'],
   },
   {
     title: 'AI Copilot',
@@ -62,45 +63,57 @@ function Skeleton() {
 }
 
 function MediaContent({ preview }) {
-  const [loaded, setLoaded] = useState(false);
-  const [error, setError] = useState(false);
-
-  if (preview.image && !error) {
+  if (preview.images) {
     return (
-      <div className="relative h-full w-full">
-        {!loaded && <Skeleton />}
-        <img
-          src={preview.image}
-          alt={preview.title}
-          className={`h-full w-full rounded-xl object-cover transition-opacity duration-500 ${loaded ? 'opacity-100' : 'opacity-0'}`}
-          onLoad={() => setLoaded(true)}
-          onError={() => setError(true)}
-          loading="lazy"
-        />
+      <div className="grid h-full w-full grid-cols-2 gap-1">
+        {preview.images.map((src, i) => (
+          <SingleImage key={i} src={src} alt={`${preview.title} ${i + 1}`} />
+        ))}
       </div>
     );
+  }
+
+  if (preview.image) {
+    return <SingleImage src={preview.image} alt={preview.title} />;
   }
 
   return <PlaceholderImage gradient={preview.gradient} gradientBg={preview.gradientBg} />;
 }
 
-function ModalMedia({ preview }) {
+function SingleImage({ src, alt }) {
   const [loaded, setLoaded] = useState(false);
   const [error, setError] = useState(false);
 
-  if (preview.image && !error) {
+  if (error) return null;
+
+  return (
+    <div className="relative h-full w-full">
+      {!loaded && <Skeleton />}
+      <img
+        src={src}
+        alt={alt}
+        className={`h-full w-full rounded-lg object-cover transition-opacity duration-500 ${loaded ? 'opacity-100' : 'opacity-0'}`}
+        onLoad={() => setLoaded(true)}
+        onError={() => setError(true)}
+        loading="lazy"
+      />
+    </div>
+  );
+}
+
+function ModalMedia({ preview }) {
+  if (preview.images) {
     return (
-      <div className="relative aspect-video w-full rounded-xl bg-slate-800 flex items-center justify-center">
-        {!loaded && <Skeleton />}
-        <img
-          src={preview.image}
-          alt={preview.title}
-          className={`max-h-full max-w-full rounded-xl object-contain transition-opacity duration-500 ${loaded ? 'opacity-100' : 'opacity-0'}`}
-          onLoad={() => setLoaded(true)}
-          onError={() => setError(true)}
-        />
+      <div className="grid w-full grid-cols-2 gap-1 rounded-xl bg-slate-800 p-1">
+        {preview.images.map((src, i) => (
+          <ModalSingleImage key={i} src={src} alt={`${preview.title} ${i + 1}`} />
+        ))}
       </div>
     );
+  }
+
+  if (preview.image) {
+    return <ModalSingleImage src={preview.image} alt={preview.title} />;
   }
 
   return (
@@ -113,6 +126,32 @@ function ModalMedia({ preview }) {
           Screenshot Coming Soon
         </span>
       </div>
+    </div>
+  );
+}
+
+function ModalSingleImage({ src, alt }) {
+  const [loaded, setLoaded] = useState(false);
+  const [error, setError] = useState(false);
+
+  if (error) {
+    return (
+      <div className="aspect-video w-full rounded-lg bg-slate-700 flex items-center justify-center">
+        <Camera className="h-8 w-8 text-slate-500" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="relative aspect-video w-full rounded-lg bg-slate-800 flex items-center justify-center">
+      {!loaded && <Skeleton />}
+      <img
+        src={src}
+        alt={alt}
+        className={`max-h-full max-w-full rounded-lg object-contain transition-opacity duration-500 ${loaded ? 'opacity-100' : 'opacity-0'}`}
+        onLoad={() => setLoaded(true)}
+        onError={() => setError(true)}
+      />
     </div>
   );
 }
