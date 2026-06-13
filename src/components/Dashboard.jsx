@@ -465,7 +465,7 @@ export default function Dashboard({
             New Risk Assessment <ArrowUpRight className="h-4 w-4" />
           </button>
           <button
-            onClick={() => onNavigate('ai-copilot')}
+            onClick={() => onNavigate('copilot')}
             className="flex items-center gap-1.5 rounded-xl bg-brand-500/35 border border-brand-400/30 px-4 py-2.5 text-xs font-semibold text-white transition-all hover:bg-brand-500/50"
           >
             Consult AI Copilot
