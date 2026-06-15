@@ -95,92 +95,93 @@ export default function Dashboard({
   const [activeEngagementsCount, setActiveEngagementsCount] = useState(0);
   const [checklistStats, setChecklistStats] = useState({ total: 0, completed: 0, progress: 0 });
 
-  useEffect(() => {
-    async function loadDashboardData() {
-      if (!isSupabaseConfigured || !supabase || !user?.id) return;
-      setIsLoadingMetrics(true);
+  const loadDashboardData = React.useCallback(async () => {
+    if (!isSupabaseConfigured || !supabase || !user?.id) return;
+    setIsLoadingMetrics(true);
 
-      async function safeFetch(name, fn) {
-        try { return await fn(); }
-        catch (e) { console.warn(`${name} query failed:`, e); return null; }
-      }
-
-      const [
-        projectsRes,
-        lettersRes,
-        memosRes,
-        promptsRes,
-        financialRes,
-        wpRes,
-        queriesCount,
-        highRiskCount,
-        latestScore,
-        engagementsData,
-        riskScoresData,
-        riskAssessmentsData,
-        activeCount,
-        checklistStatsData
-      ] = await Promise.all([
-        safeFetch('projectCount', () =>
-          supabase.from('audit_projects').select('*', { count: 'exact', head: true }).eq('user_id', user.id)
-        ),
-        safeFetch('lettersCount', () =>
-          supabase.from('management_letters').select('*', { count: 'exact', head: true }).eq('user_id', user.id)
-        ),
-        safeFetch('memosCount', () =>
-          supabase.from('planning_memos').select('*', { count: 'exact', head: true }).eq('user_id', user.id)
-        ),
-        safeFetch('promptsCount', () =>
-          supabase.from('prompt_library').select('*', { count: 'exact', head: true }).eq('user_id', user.id)
-        ),
-        safeFetch('financialRedFlags', () =>
-          supabase.from('financial_analyses').select('red_flags').eq('user_id', user.id)
-        ),
-        safeFetch('wpCount', () =>
-          supabase.from('working_papers').select('*', { count: 'exact', head: true }).eq('user_id', user.id)
-        ),
-        safeFetch('aiQueriesCount', () => fetchAiQueriesCount(user.id)),
-        safeFetch('highRiskCount', () => fetchHighRiskCount(user.id)),
-        safeFetch('latestScore', () => fetchLatestRiskScore(user.id)),
-        safeFetch('engagements', () => fetchActiveEngagements(user.id)),
-        safeFetch('riskScores', () => fetchProjectRiskScores(user.id)),
-        safeFetch('riskAssessments', () => fetchAllRiskAssessments(user.id)),
-        safeFetch('activeCount', () => fetchActiveEngagementsCount(user.id)),
-        safeFetch('checklistStats', () => fetchChecklistStats(user.id, activeProject?.id))
-      ]);
-
-      const redFlagsCount = financialRes?.data?.reduce((acc, curr) => {
-        return acc + (Array.isArray(curr.red_flags) ? curr.red_flags.length : 0);
-      }, 0) ?? 0;
-
-      const checklistStatsSafe = checklistStatsData || { total: 0, completed: 0, progress: 0 };
-
-      setStats(prev => ({
-        ...prev,
-        projects: projectsRes?.count ?? prev.projects,
-        highRisks: highRiskCount ?? prev.highRisks,
-        workingPapers: wpRes?.count ?? prev.workingPapers,
-        queries: queriesCount ?? prev.queries,
-        recentRiskScore: latestScore || prev.recentRiskScore,
-        managementLetters: lettersRes?.count ?? prev.managementLetters ?? 0,
-        planningMemos: memosRes?.count ?? prev.planningMemos ?? 0,
-        promptLibrary: promptsRes?.count ?? prev.promptLibrary ?? 0,
-        financialRedFlags: redFlagsCount,
-        checklistCompletion: checklistStatsSafe.progress
-      }));
-      setEngagements(engagementsData || []);
-      setRiskScores(riskScoresData || {});
-      setRiskAssessments(riskAssessmentsData || []);
-      setActiveEngagementsCount(activeCount ?? 0);
-      setChecklistStats(checklistStatsSafe);
-
-      const grid = buildHeatmapGrid();
-      setHeatmapGrid(placeAssessmentsOnGrid(grid, riskAssessmentsData || []));
-
-      setIsLoadingMetrics(false);
+    async function safeFetch(name, fn) {
+      try { return await fn(); }
+      catch (e) { console.warn(`${name} query failed:`, e); return null; }
     }
+
+    const [
+      projectsRes,
+      lettersRes,
+      memosRes,
+      promptsRes,
+      financialRes,
+      wpRes,
+      queriesCount,
+      highRiskCount,
+      latestScore,
+      engagementsData,
+      riskScoresData,
+      riskAssessmentsData,
+      activeCount,
+      checklistStatsData
+    ] = await Promise.all([
+      safeFetch('projectCount', () =>
+        supabase.from('audit_projects').select('*', { count: 'exact', head: true }).eq('user_id', user.id)
+      ),
+      safeFetch('lettersCount', () =>
+        supabase.from('management_letters').select('*', { count: 'exact', head: true }).eq('user_id', user.id)
+      ),
+      safeFetch('memosCount', () =>
+        supabase.from('planning_memos').select('*', { count: 'exact', head: true }).eq('user_id', user.id)
+      ),
+      safeFetch('promptsCount', () =>
+        supabase.from('prompt_library').select('*', { count: 'exact', head: true }).eq('user_id', user.id)
+      ),
+      safeFetch('financialRedFlags', () =>
+        supabase.from('financial_analyses').select('red_flags').eq('user_id', user.id)
+      ),
+      safeFetch('wpCount', () =>
+        supabase.from('working_papers').select('*', { count: 'exact', head: true }).eq('user_id', user.id)
+      ),
+      safeFetch('aiQueriesCount', () => fetchAiQueriesCount(user.id)),
+      safeFetch('highRiskCount', () => fetchHighRiskCount(user.id)),
+      safeFetch('latestScore', () => fetchLatestRiskScore(user.id)),
+      safeFetch('engagements', () => fetchActiveEngagements(user.id)),
+      safeFetch('riskScores', () => fetchProjectRiskScores(user.id)),
+      safeFetch('riskAssessments', () => fetchAllRiskAssessments(user.id)),
+      safeFetch('activeCount', () => fetchActiveEngagementsCount(user.id)),
+      safeFetch('checklistStats', () => fetchChecklistStats(user.id, activeProject?.id))
+    ]);
+
+    const redFlagsCount = financialRes?.data?.reduce((acc, curr) => {
+      return acc + (Array.isArray(curr.red_flags) ? curr.red_flags.length : 0);
+    }, 0) ?? 0;
+
+    const checklistStatsSafe = checklistStatsData || { total: 0, completed: 0, progress: 0 };
+
+    setStats(prev => ({
+      ...prev,
+      projects: projectsRes?.count ?? prev.projects,
+      highRisks: highRiskCount ?? prev.highRisks,
+      workingPapers: wpRes?.count ?? prev.workingPapers,
+      queries: queriesCount ?? prev.queries,
+      recentRiskScore: latestScore || prev.recentRiskScore,
+      managementLetters: lettersRes?.count ?? prev.managementLetters ?? 0,
+      planningMemos: memosRes?.count ?? prev.planningMemos ?? 0,
+      promptLibrary: promptsRes?.count ?? prev.promptLibrary ?? 0,
+      financialRedFlags: redFlagsCount,
+      checklistCompletion: checklistStatsSafe.progress
+    }));
+    setEngagements(engagementsData || []);
+    setRiskScores(riskScoresData || {});
+    setRiskAssessments(riskAssessmentsData || []);
+    setActiveEngagementsCount(activeCount ?? 0);
+    setChecklistStats(checklistStatsSafe);
+
+    const grid = buildHeatmapGrid();
+    setHeatmapGrid(placeAssessmentsOnGrid(grid, riskAssessmentsData || []));
+
+    setIsLoadingMetrics(false);
+  }, [user?.id, activeProject?.id, setStats]);
+
+  useEffect(() => {
     loadDashboardData();
-  }, [activeProject, setStats, user?.id]);
+  }, [loadDashboardData]);
 
   useEffect(() => {
     async function loadChecklist() {
@@ -305,6 +306,8 @@ export default function Dashboard({
           setSuccessMsg(`Project "${projectName}" successfully saved to Supabase database!`);
           setProjectName('');
           setClientName('');
+          await loadDashboardData();
+          setStats(prev => ({ ...prev, projects: (prev.projects || 0) + 1 }));
         }
       } catch (err) {
         setDbError(getSupabaseErrorMessage(err));
@@ -784,19 +787,25 @@ export default function Dashboard({
               <div className="space-y-2">
                 {engagements.map((eng) => {
                   const risk = riskScores[eng.id];
+                  const isActive = activeProject?.id === eng.id;
                   return (
                     <div
                       key={eng.id}
                       onClick={() => handleClickEngagement(eng)}
                       className={`rounded-xl border p-3 transition-all cursor-pointer hover:shadow-sm ${
-                        activeProject?.id === eng.id
-                          ? 'border-brand-300 bg-brand-50/30'
+                        isActive
+                          ? 'border-brand-400 bg-brand-50/40 ring-1 ring-brand-200'
                           : 'border-slate-100 hover:bg-slate-50/50'
                       }`}
                     >
                       <div className="flex items-center justify-between gap-4">
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center gap-2">
+                            {isActive && (
+                              <span className="inline-flex items-center gap-1 rounded-full bg-brand-600 px-2 py-0.5 text-[8px] font-bold text-white uppercase tracking-wider">
+                                Current
+                              </span>
+                            )}
                             <p className="text-xs font-semibold text-slate-800">{eng.client_name}</p>
                             <span className="text-[10px] text-slate-400">-</span>
                             <p className="text-[10px] text-slate-500">{eng.project_name}</p>
@@ -947,38 +956,51 @@ export default function Dashboard({
             <h3 className="font-display text-base font-bold text-slate-900">ISA 315-Inspired Risk Assessment View</h3>
             <p className="text-xs text-slate-400">Conceptual risk visualization based on inherent risk factors and control effectiveness</p>
           </div>
-          <span className="text-xs text-slate-400 italic">{riskAssessments.length} assessments</span>
+          <div className="flex items-center gap-3">
+            <span className="text-xs text-slate-400">{riskAssessments.length} assessment{riskAssessments.length !== 1 ? 's' : ''}</span>
+            <button
+              onClick={() => onNavigate('risk-assessment')}
+              className="rounded-lg bg-brand-600 px-3 py-1.5 text-[10px] font-semibold text-white hover:bg-brand-700 transition-colors"
+            >
+              + New Assessment
+            </button>
+          </div>
         </div>
 
-        <div className="mt-6 space-y-6">
-          <div className="grid gap-6 lg:grid-cols-2">
+        <div className="mt-6 space-y-8">
+          <div className="grid gap-8 lg:grid-cols-2">
             <div>
-              <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider mb-3">Inherent Risk Matrix (Likelihood × Magnitude)</h4>
-              <div className="overflow-x-auto">
+              <h4 className="text-sm font-bold text-slate-800 mb-4 flex items-center gap-2">
+                <Target className="h-4 w-4 text-brand-500" />
+                Inherent Risk Matrix (Likelihood × Magnitude)
+              </h4>
+              <div className="overflow-x-auto rounded-xl border border-slate-200 bg-slate-50/30 p-3">
                 <div className="grid grid-cols-[auto_repeat(5,minmax(0,1fr))] gap-1 min-w-[400px]">
                   <div className="col-span-1" />
                   {MAGNITUDE_LABELS.map((label, i) => (
-                    <div key={label} className="text-center text-[8px] font-semibold text-slate-400 pb-1">
-                      <span>{i + 1}</span>
-                      <span className="block">{label}</span>
+                    <div key={label} className="text-center text-[9px] font-semibold text-slate-500 pb-2">
+                      <span className="block text-xs font-bold text-slate-700">{i + 1}</span>
+                      <span>{label}</span>
                     </div>
                   ))}
                   {heatmapGrid.map((row, likIdx) => (
                     <React.Fragment key={likIdx}>
-                      <div className="flex items-center justify-end pr-1.5 text-[8px] font-semibold text-slate-400">
+                      <div className="flex items-center justify-end pr-2 text-[9px] font-semibold text-slate-500">
                         <span className="text-right">
-                          <span>{5 - likIdx}</span>
-                          <span className="block">{LIKELIHOOD_LABELS[4 - likIdx]}</span>
+                          <span className="block text-xs font-bold text-slate-700">{5 - likIdx}</span>
+                          <span>{LIKELIHOOD_LABELS[4 - likIdx]}</span>
                         </span>
                       </div>
                       {row.map((cell, magIdx) => (
                         <div
                           key={`${likIdx}-${magIdx}`}
-                          className={`rounded-lg border ${cell.color.bg} p-1.5 text-center min-h-[52px] flex flex-col items-center justify-center gap-0.5 transition-all hover:shadow-sm`}
+                          className={`rounded-lg border ${cell.color.bg} p-2 text-center min-h-[58px] flex flex-col items-center justify-center gap-1 transition-all hover:shadow-sm hover:scale-[1.02]`}
                         >
-                          <span className={`text-[8px] font-bold ${cell.color.badge}`}>{cell.level}</span>
+                          <span className={`text-[9px] font-bold ${cell.color.badge}`}>{cell.level}</span>
                           {cell.assessments.length > 0 && (
-                            <span className="text-[9px] font-bold text-slate-700">{cell.assessments.length}</span>
+                            <span className="text-[11px] font-bold text-slate-700 bg-white/60 rounded-full px-2 py-0.5">
+                              {cell.assessments.length}
+                            </span>
                           )}
                         </div>
                       ))}
@@ -986,63 +1008,70 @@ export default function Dashboard({
                   ))}
                   <div className="col-span-1" />
                   {['Mag 1', 'Mag 2', 'Mag 3', 'Mag 4', 'Mag 5'].map((l, i) => (
-                    <div key={l} className="text-center text-[7px] text-slate-400 pt-0.5">{l}</div>
+                    <div key={l} className="text-center text-[8px] text-slate-400 pt-1">{l}</div>
                   ))}
                 </div>
               </div>
               {riskAssessments.length === 0 && (
-                <div className="mt-4 flex items-center justify-center gap-2 text-xs text-slate-400">
-                  <Target className="h-4 w-4" />
-                  <p>No risk assessments yet.</p>
-                  <button
-                    onClick={() => onNavigate('risk-assessment')}
-                    className="ml-1 rounded-lg bg-brand-600 px-3 py-1 text-[10px] font-semibold text-white hover:bg-brand-700 transition-colors"
-                  >
-                    Create Risk Assessment
-                  </button>
+                <div className="mt-6 flex items-center justify-center gap-3 text-sm text-slate-400 bg-slate-50 rounded-xl border border-dashed border-slate-200 p-6">
+                  <Target className="h-5 w-5" />
+                  <p>No risk assessments yet. Create one to populate the matrix.</p>
                 </div>
               )}
             </div>
 
             {riskAssessments.length > 0 && (
               <div>
-                <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider mb-3">Control Risk Assessment</h4>
-                <div className="space-y-2">
+                <h4 className="text-sm font-bold text-slate-800 mb-4 flex items-center gap-2">
+                  <ShieldAlert className="h-4 w-4 text-amber-500" />
+                  Control Risk Assessment
+                </h4>
+                <div className="space-y-3 max-h-[420px] overflow-y-auto pr-1">
                   {riskAssessments.slice(0, 5).map((a) => {
                     const controlLevel = getControlRiskLevel(a.control_risk_score);
                     const controlColor = getControlRiskColor(controlLevel);
                     return (
                       <div
                         key={a.id}
-                        className={`rounded-xl border ${a.significant_risk ? 'border-red-300 bg-red-50/30' : 'border-slate-100'} p-3 text-xs`}
+                        className={`rounded-xl border ${a.significant_risk ? 'border-red-200 bg-red-50/40' : 'border-slate-200 bg-white'} p-4 text-xs shadow-sm`}
                       >
-                        <div className="flex items-center justify-between mb-1">
-                          <span className="font-semibold text-slate-700">{a.risk_area || 'N/A'}</span>
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="font-bold text-slate-800">{a.risk_area || 'N/A'}</span>
                           {a.significant_risk && (
-                            <span className="inline-flex items-center gap-1 rounded-full bg-red-100 px-2 py-0.5 text-[9px] font-bold text-red-700">
-                              <AlertOctagon className="h-3 w-3" /> Significant Risk
+                            <span className="inline-flex items-center gap-1 rounded-full bg-red-100 px-2.5 py-1 text-[10px] font-bold text-red-700">
+                              <AlertOctagon className="h-3.5 w-3.5" /> Significant Risk
                             </span>
                           )}
                         </div>
-                        <div className="flex items-center gap-2 text-[10px] text-slate-500">
-                          <span>Assertion: {a.assertion || 'N/A'}</span>
-                          <span>|</span>
-                          <span>Inherent: <span className={`font-semibold ${getInherentRiskColor(getInherentRiskLevel(a.likelihood, a.magnitude)).badge}`}>
-                            {getInherentRiskLevel(a.likelihood, a.magnitude)}
-                          </span></span>
-                          <span>|</span>
-                          <span>Control: <span className={`font-semibold ${controlColor.badge}`}>{controlLevel}</span></span>
-                        </div>
-                        <div className="mt-1.5 flex items-center gap-2 text-[9px] text-slate-400">
-                          <span>Lik: {a.likelihood}/5</span>
-                          <span>Mag: {a.magnitude}/5</span>
-                          <span>Inherent Score: {a.inherent_risk_score || a.likelihood * a.magnitude}/25</span>
+                        <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-[11px]">
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-slate-400">Assertion:</span>
+                            <span className="font-semibold text-slate-700">{a.assertion || 'N/A'}</span>
+                          </div>
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-slate-400">Inherent:</span>
+                            <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[9px] font-bold ${getInherentRiskColor(getInherentRiskLevel(a.likelihood, a.magnitude)).badge}`}>
+                              {getInherentRiskLevel(a.likelihood, a.magnitude)}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-slate-400">Control:</span>
+                            <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[9px] font-bold ${controlColor.badge}`}>{controlLevel}</span>
+                          </div>
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-slate-400">Score:</span>
+                            <span className="font-semibold text-slate-700">{a.inherent_risk_score || a.likelihood * a.magnitude}/25</span>
+                          </div>
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-slate-400">Lik/Mag:</span>
+                            <span className="font-semibold text-slate-700">{a.likelihood}/{a.magnitude}</span>
+                          </div>
                         </div>
                       </div>
                     );
                   })}
                   {riskAssessments.length > 5 && (
-                    <p className="text-[10px] text-slate-400 text-center pt-1">
+                    <p className="text-[11px] text-slate-400 text-center pt-2 border-t border-slate-100">
                       + {riskAssessments.length - 5} more assessment{riskAssessments.length - 5 !== 1 ? 's' : ''}
                     </p>
                   )}
@@ -1052,56 +1081,59 @@ export default function Dashboard({
           </div>
 
           {riskAssessments.length > 0 && (
-            <div className="border-t border-slate-100 pt-4">
-              <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider mb-3">Combined Risk Summary</h4>
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-[10px]">
+            <div className="border-t border-slate-100 pt-6">
+              <h4 className="text-sm font-bold text-slate-800 mb-4 flex items-center gap-2">
+                <Gauge className="h-4 w-4 text-violet-500" />
+                Combined Risk Summary
+              </h4>
+              <div className="overflow-x-auto rounded-xl border border-slate-200">
+                <table className="w-full text-left text-xs">
                   <thead>
-                    <tr className="border-b border-slate-100 text-slate-400">
-                      <th className="py-2 pr-3 font-semibold">Risk Area</th>
-                      <th className="py-2 pr-3 font-semibold">Assertion</th>
-                      <th className="py-2 pr-3 font-semibold">Lik</th>
-                      <th className="py-2 pr-3 font-semibold">Mag</th>
-                      <th className="py-2 pr-3 font-semibold">Inherent Risk</th>
-                      <th className="py-2 pr-3 font-semibold">Control Risk</th>
-                      <th className="py-2 pr-3 font-semibold">Overall</th>
-                      <th className="py-2 font-semibold">Significant</th>
+                    <tr className="bg-slate-50 border-b border-slate-200 text-slate-500">
+                      <th className="py-3 px-4 font-bold text-[10px] uppercase tracking-wider">Risk Area</th>
+                      <th className="py-3 px-4 font-bold text-[10px] uppercase tracking-wider">Assertion</th>
+                      <th className="py-3 px-4 font-bold text-[10px] uppercase tracking-wider text-center">Lik</th>
+                      <th className="py-3 px-4 font-bold text-[10px] uppercase tracking-wider text-center">Mag</th>
+                      <th className="py-3 px-4 font-bold text-[10px] uppercase tracking-wider text-center">Inherent</th>
+                      <th className="py-3 px-4 font-bold text-[10px] uppercase tracking-wider text-center">Control</th>
+                      <th className="py-3 px-4 font-bold text-[10px] uppercase tracking-wider text-center">Overall</th>
+                      <th className="py-3 px-4 font-bold text-[10px] uppercase tracking-wider text-center">Significant</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-50">
+                  <tbody className="divide-y divide-slate-100">
                     {riskAssessments.map((a) => {
                       const inherentLevel = getInherentRiskLevel(a.likelihood, a.magnitude);
                       const controlLevel = getControlRiskLevel(a.control_risk_score);
                       const overallLevel = getOverallRiskLevel(inherentLevel, controlLevel);
                       const overallColor = getOverallRiskColor(overallLevel);
                       return (
-                        <tr key={a.id} className={`hover:bg-slate-50/50 ${a.significant_risk ? 'bg-red-50/20' : ''}`}>
-                          <td className="py-2 pr-3 font-medium text-slate-700">{a.risk_area || 'N/A'}</td>
-                          <td className="py-2 pr-3 text-slate-500">{a.assertion || 'N/A'}</td>
-                          <td className="py-2 pr-3 text-slate-600">{a.likelihood || '-'}</td>
-                          <td className="py-2 pr-3 text-slate-600">{a.magnitude || '-'}</td>
-                          <td className="py-2 pr-3">
-                            <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[8px] font-bold ${getInherentRiskColor(inherentLevel).badge}`}>
+                        <tr key={a.id} className={`hover:bg-slate-50/70 transition-colors ${a.significant_risk ? 'bg-red-50/30' : ''}`}>
+                          <td className="py-3 px-4 font-semibold text-slate-800">{a.risk_area || 'N/A'}</td>
+                          <td className="py-3 px-4 text-slate-500">{a.assertion || 'N/A'}</td>
+                          <td className="py-3 px-4 text-center font-mono font-semibold text-slate-700">{a.likelihood || '-'}</td>
+                          <td className="py-3 px-4 text-center font-mono font-semibold text-slate-700">{a.magnitude || '-'}</td>
+                          <td className="py-3 px-4 text-center">
+                            <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-[10px] font-bold ${getInherentRiskColor(inherentLevel).badge}`}>
                               {inherentLevel}
                             </span>
                           </td>
-                          <td className="py-2 pr-3">
-                            <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[8px] font-bold ${getControlRiskColor(controlLevel).badge}`}>
+                          <td className="py-3 px-4 text-center">
+                            <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-[10px] font-bold ${getControlRiskColor(controlLevel).badge}`}>
                               {controlLevel}
                             </span>
                           </td>
-                          <td className="py-2 pr-3">
-                            <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[8px] font-bold ${overallColor.badge}`}>
+                          <td className="py-3 px-4 text-center">
+                            <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-[10px] font-bold ${overallColor.badge}`}>
                               {overallLevel}
                             </span>
                           </td>
-                          <td className="py-2">
+                          <td className="py-3 px-4 text-center">
                             {a.significant_risk ? (
-                              <span className="inline-flex items-center gap-1 rounded-full bg-red-100 px-2 py-0.5 text-[8px] font-bold text-red-700">
-                                <AlertOctagon className="h-2.5 w-2.5" /> Yes
+                              <span className="inline-flex items-center gap-1 rounded-full bg-red-100 px-2.5 py-1 text-[10px] font-bold text-red-700">
+                                <AlertOctagon className="h-3 w-3" /> Yes
                               </span>
                             ) : (
-                              <span className="text-slate-400">No</span>
+                              <span className="text-slate-400 text-[11px]">No</span>
                             )}
                           </td>
                         </tr>

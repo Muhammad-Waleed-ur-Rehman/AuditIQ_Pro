@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { calculateRiskScore } from '../lib/riskScoring';
 import { getInherentRiskLevel } from '../lib/riskHeatmap';
 import { isSupabaseConfigured, supabase, getSupabaseErrorMessage } from '../lib/supabaseClient';
@@ -14,12 +14,15 @@ import {
   AlertTriangle, 
   AlertCircle,
   Database,
+  History,
+  Calendar,
+  Target,
+  Eye,
   ArrowLeft
 } from 'lucide-react';
 
 export default function RiskAssessment({ activeProject, onRiskGenerated }) {
   const { user } = useAuth();
-  // Form input states
   const [industry, setIndustry] = useState('Technology');
   const [revenue, setRevenue] = useState('150');
   const [employees, setEmployees] = useState('250');
@@ -32,11 +35,38 @@ export default function RiskAssessment({ activeProject, onRiskGenerated }) {
   const [assertion, setAssertion] = useState('Accuracy');
   const [significantRisk, setSignificantRisk] = useState(false);
 
-  // Simulation output state
   const [result, setResult] = useState(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [saveStatus, setSaveStatus] = useState(null);
   const [dbError, setDbError] = useState(null);
+
+  const [savedAssessments, setSavedAssessments] = useState([]);
+  const [loadingHistory, setLoadingHistory] = useState(false);
+  const [viewingAssessment, setViewingAssessment] = useState(null);
+
+  useEffect(() => {
+    if (!isSupabaseConfigured || !supabase || !user?.id || !activeProject?.id) return;
+    loadSavedAssessments();
+  }, [activeProject?.id, user?.id]);
+
+  const loadSavedAssessments = async () => {
+    setLoadingHistory(true);
+    try {
+      const { data, error } = await supabase
+        .from('risk_assessments')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('project_id', activeProject.id)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setSavedAssessments(data || []);
+    } catch (err) {
+      console.warn('Failed to load saved assessments:', err);
+    } finally {
+      setLoadingHistory(false);
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -73,7 +103,6 @@ export default function RiskAssessment({ activeProject, onRiskGenerated }) {
     if (controlRating === 'Weak') controlScore = 100;
     else if (controlRating === 'Moderate') controlScore = 60;
 
-    // Compute score locally
     const output = calculateRiskScore({
       industry,
       revenue,
@@ -97,41 +126,48 @@ export default function RiskAssessment({ activeProject, onRiskGenerated }) {
 
     if (isSupabaseConfigured && supabase) {
       try {
-        // Save to Supabase
-        const { error } = await supabase
-          .from('risk_assessments')
-          .insert([
-            {
-              user_id: user.id,
-              project_id: activeProject.id,
-              risk_score: output.score,
-              risk_level: output.level,
-              key_risks: output.keyRiskFactors,
-              recommendations: output.focusAreas,
-              fraud_indicators: output.fraudIndicators,
-              likelihood,
-              magnitude,
-              inherent_risk_score: inherentScore,
-              control_risk_score: controlScore,
-              significant_risk: significantRisk,
-              risk_area: riskArea,
-              assertion
-            }
-          ]);
+        const insertPayload = {
+          user_id: user.id,
+          project_id: activeProject.id,
+          risk_score: output.score,
+          risk_level: output.level,
+          key_risks: output.keyRiskFactors,
+          recommendations: output.focusAreas,
+          likelihood,
+          magnitude,
+          inherent_risk_score: inherentScore,
+          control_risk_score: controlScore,
+          significant_risk: significantRisk,
+          risk_area: riskArea,
+          assertion
+        };
 
-        if (error) throw error;
+        let { error } = await supabase
+          .from('risk_assessments')
+          .insert([{ ...insertPayload, fraud_indicators: output.fraudIndicators }]);
+
+        if (error?.message?.includes('fraud_indicators')) {
+          const { error: fallbackError } = await supabase
+            .from('risk_assessments')
+            .insert([insertPayload]);
+          if (fallbackError) throw fallbackError;
+        } else if (error) {
+          throw error;
+        }
+
         setSaveStatus('Assessment successfully compiled & saved to Supabase!');
+        loadSavedAssessments();
       } catch (err) {
         setDbError(getSupabaseErrorMessage(err));
       } finally {
         setResult(enhancedOutput);
+        setViewingAssessment(null);
         setIsGenerating(false);
         if (onRiskGenerated) {
           onRiskGenerated(enhancedOutput);
         }
       }
     } else {
-      // Sandbox fallback mode
       setTimeout(() => {
         setResult(enhancedOutput);
         setIsGenerating(false);
@@ -157,7 +193,36 @@ export default function RiskAssessment({ activeProject, onRiskGenerated }) {
     }
   };
 
-  // Block screen if no active project is found
+  const viewSavedAssessment = (assessment) => {
+    setViewingAssessment(assessment);
+    setResult({
+      score: assessment.risk_score,
+      level: assessment.risk_level,
+      keyRiskFactors: assessment.key_risks || [],
+      focusAreas: assessment.recommendations || [],
+      fraudIndicators: assessment.fraud_indicators || [],
+      timestamp: new Date(assessment.created_at).toLocaleDateString(),
+      inputs: {
+        industry: '',
+        revenue: '',
+        employees: '',
+        controlRating: '',
+        priorFindings: '',
+        integrityRating: ''
+      },
+      likelihood: assessment.likelihood,
+      magnitude: assessment.magnitude,
+      inherentRiskScore: assessment.inherent_risk_score || assessment.likelihood * assessment.magnitude,
+      inherentRiskLevel: getInherentRiskLevel(assessment.likelihood, assessment.magnitude),
+      controlRiskScore: assessment.control_risk_score,
+      significantRisk: assessment.significant_risk,
+      riskArea: assessment.risk_area,
+      assertion: assessment.assertion
+    });
+  };
+
+  const displayResult = viewingAssessment || result;
+
   if (!activeProject) {
     return (
       <div className="p-4 md:p-6 max-w-4xl mx-auto text-center py-12">
@@ -183,7 +248,6 @@ export default function RiskAssessment({ activeProject, onRiskGenerated }) {
 
   return (
     <div className="p-4 md:p-6 max-w-7xl mx-auto space-y-6">
-      {/* Active Project Banner */}
       <div className="rounded-xl border border-brand-100 bg-brand-50/10 px-4 py-3 flex items-center justify-between text-xs font-medium text-slate-700">
         <div className="flex items-center gap-2">
           <Database className="h-4 w-4 text-brand-500" />
@@ -193,14 +257,12 @@ export default function RiskAssessment({ activeProject, onRiskGenerated }) {
       </div>
 
       <div className="grid gap-6 lg:grid-cols-5">
-        {/* Left Side: Form Inputs */}
         <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm lg:col-span-2">
           <h3 className="font-display text-base font-bold text-slate-900 border-b border-slate-100 pb-3 mb-4">
             Auditee Profile & Control Environment
           </h3>
 
           <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Industry Selection - Locked to Active Project Industry to keep consistency */}
             <div>
               <label className="block text-xs font-semibold text-slate-500 mb-1.5 uppercase">Industry Sector</label>
               <select
@@ -217,7 +279,6 @@ export default function RiskAssessment({ activeProject, onRiskGenerated }) {
               </select>
             </div>
 
-            {/* Financial Revenue */}
             <div>
               <label className="block text-xs font-semibold text-slate-500 mb-1.5 uppercase">Annual Revenue ($ Millions)</label>
               <input
@@ -232,7 +293,6 @@ export default function RiskAssessment({ activeProject, onRiskGenerated }) {
               />
             </div>
 
-            {/* Total Employees */}
             <div>
               <label className="block text-xs font-semibold text-slate-500 mb-1.5 uppercase">Employee Headcount</label>
               <input
@@ -246,7 +306,6 @@ export default function RiskAssessment({ activeProject, onRiskGenerated }) {
               />
             </div>
 
-            {/* Internal Control Rating */}
             <div>
               <label className="block text-xs font-semibold text-slate-500 mb-1.5 uppercase">Internal Control Rating (COSO)</label>
               <div className="grid grid-cols-3 gap-2">
@@ -269,7 +328,6 @@ export default function RiskAssessment({ activeProject, onRiskGenerated }) {
               </div>
             </div>
 
-            {/* Prior Audit Findings */}
             <div>
               <label className="block text-xs font-semibold text-slate-500 mb-1.5 uppercase">Prior Audit Findings</label>
               <select
@@ -284,7 +342,6 @@ export default function RiskAssessment({ activeProject, onRiskGenerated }) {
               </select>
             </div>
 
-            {/* Management Integrity Rating */}
             <div>
               <label className="block text-xs font-semibold text-slate-500 mb-1.5 uppercase">Management Integrity Rating</label>
               <div className="grid grid-cols-3 gap-2">
@@ -307,11 +364,9 @@ export default function RiskAssessment({ activeProject, onRiskGenerated }) {
               </div>
             </div>
 
-            {/* ISA 315: Inherent Risk Factors */}
             <div className="border-t border-slate-100 pt-4 mt-4">
               <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider mb-3">ISA 315 Inherent Risk Factors</h4>
 
-              {/* Likelihood (1-5) */}
               <div className="mb-3">
                 <label className="block text-xs font-semibold text-slate-500 mb-1.5 uppercase">Likelihood of Misstatement</label>
                 <div className="grid grid-cols-5 gap-1.5">
@@ -335,7 +390,6 @@ export default function RiskAssessment({ activeProject, onRiskGenerated }) {
                 </p>
               </div>
 
-              {/* Magnitude (1-5) */}
               <div className="mb-3">
                 <label className="block text-xs font-semibold text-slate-500 mb-1.5 uppercase">Magnitude of Misstatement</label>
                 <div className="grid grid-cols-5 gap-1.5">
@@ -359,7 +413,6 @@ export default function RiskAssessment({ activeProject, onRiskGenerated }) {
                 </p>
               </div>
 
-              {/* Risk Area */}
               <div className="mb-3">
                 <label className="block text-xs font-semibold text-slate-500 mb-1.5 uppercase">Audit Risk Area</label>
                 <select
@@ -381,7 +434,6 @@ export default function RiskAssessment({ activeProject, onRiskGenerated }) {
                 </select>
               </div>
 
-              {/* Financial Statement Assertion */}
               <div className="mb-3">
                 <label className="block text-xs font-semibold text-slate-500 mb-1.5 uppercase">Financial Statement Assertion</label>
                 <select
@@ -399,7 +451,6 @@ export default function RiskAssessment({ activeProject, onRiskGenerated }) {
                 </select>
               </div>
 
-              {/* Significant Risk Toggle */}
               <div className="flex items-center gap-3 mb-1">
                 <button
                   type="button"
@@ -423,7 +474,6 @@ export default function RiskAssessment({ activeProject, onRiskGenerated }) {
               </p>
             </div>
 
-            {/* Submit button */}
             <button
               type="submit"
               disabled={isGenerating}
@@ -438,9 +488,8 @@ export default function RiskAssessment({ activeProject, onRiskGenerated }) {
           </form>
         </div>
 
-        {/* Right Side: Results Display */}
         <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm lg:col-span-3 flex flex-col justify-between min-h-[500px]">
-          {!result ? (
+          {!displayResult ? (
             <div className="my-auto flex flex-col items-center justify-center text-center p-6 space-y-4">
               <div className="rounded-full bg-slate-50 p-4 border border-slate-100 text-slate-400">
                 <Gauge className="h-10 w-10 animate-pulse text-brand-500" />
@@ -454,31 +503,42 @@ export default function RiskAssessment({ activeProject, onRiskGenerated }) {
             </div>
           ) : (
             <div className="space-y-6 animate-fadeIn">
-              {/* Header metrics */}
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
-                <div>
-                  <h4 className="font-display text-base font-bold text-slate-800">Audit Risk Valuation Report</h4>
-                  <p className="text-[10px] text-slate-400">Compiled on {result.timestamp} • Dynamic COSO Index Model</p>
+              <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+                <div className="flex items-center gap-2">
+                  {viewingAssessment && (
+                    <button
+                      onClick={() => { setViewingAssessment(null); setResult(null); }}
+                      className="rounded-lg p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-all"
+                      title="Back to new assessment"
+                    >
+                      <ArrowLeft className="h-4 w-4" />
+                    </button>
+                  )}
+                  <div>
+                    <h4 className="font-display text-base font-bold text-slate-800">Audit Risk Valuation Report</h4>
+                    <p className="text-[10px] text-slate-400">
+                      {viewingAssessment ? 'Saved assessment from ' : 'Compiled on '}
+                      {displayResult.timestamp} • Dynamic COSO Index Model
+                    </p>
+                  </div>
                 </div>
                 
-                <div className={`rounded-xl border px-4 py-2 flex items-center gap-2.5 ${getSeverityStyle(result.level)}`}>
-                  {result.level === 'High' ? (
+                <div className={`rounded-xl border px-4 py-2 flex items-center gap-2.5 ${getSeverityStyle(displayResult.level)}`}>
+                  {displayResult.level === 'High' ? (
                     <ShieldAlert className="h-5 w-5 text-red-500 shrink-0" />
-                  ) : result.level === 'Medium' ? (
+                  ) : displayResult.level === 'Medium' ? (
                     <AlertTriangle className="h-5 w-5 text-amber-500 shrink-0" />
                   ) : (
                     <ShieldCheck className="h-5 w-5 text-emerald-500 shrink-0" />
                   )}
                   <div>
                     <span className="block text-[9px] uppercase tracking-wider font-semibold opacity-75">Audit Risk Level</span>
-                    <span className="font-display text-sm font-bold">{result.level}</span>
+                    <span className="font-display text-sm font-bold">{displayResult.level}</span>
                   </div>
                 </div>
               </div>
 
-              {/* Gauge and breakdown summary */}
               <div className="grid gap-4 sm:grid-cols-3">
-                {/* Circular Score Gauge */}
                 <div className="flex flex-col items-center justify-center border border-slate-100 rounded-xl p-4 bg-slate-50/50">
                   <div className="relative h-20 w-20">
                     <svg className="w-full h-full transform -rotate-90">
@@ -487,79 +547,60 @@ export default function RiskAssessment({ activeProject, onRiskGenerated }) {
                         cx="40" 
                         cy="40" 
                         r="32" 
-                        className={`transition-all duration-500 ${getGaugeColor(result.score)}`} 
+                        className={`transition-all duration-500 ${getGaugeColor(displayResult.score)}`} 
                         strokeWidth="6" 
                         fill="transparent" 
                         strokeDasharray={200}
-                        strokeDashoffset={200 - (200 * result.score) / 100}
+                        strokeDashoffset={200 - (200 * displayResult.score) / 100}
                       />
                     </svg>
                     <span className="absolute inset-0 flex items-center justify-center font-display text-base font-bold text-slate-800">
-                      {result.score}
+                      {displayResult.score}
                     </span>
                   </div>
                   <span className="mt-2 text-[10px] font-bold text-slate-500 uppercase tracking-wider">Overall Score</span>
                 </div>
 
-                {/* Scope indicators */}
                 <div className="sm:col-span-2 border border-slate-100 rounded-xl p-4 bg-slate-50/30 flex flex-col justify-center space-y-1.5 text-xs">
                   <div className="flex justify-between">
-                    <span className="text-slate-500">Industry:</span>
-                    <span className="font-semibold text-slate-700">{result.inputs.industry}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-slate-500">Controls Rating:</span>
-                    <span className="font-semibold text-slate-700">{result.inputs.controlRating}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-slate-500">Prior Findings:</span>
-                    <span className="font-semibold text-slate-700">{result.inputs.priorFindings}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-slate-500">Management Integrity:</span>
-                    <span className="font-semibold text-slate-700">{result.inputs.integrityRating}</span>
-                  </div>
-                  <div className="border-t border-slate-200 my-1.5" />
-                  <div className="flex justify-between">
                     <span className="text-slate-500">Risk Area:</span>
-                    <span className="font-semibold text-slate-700">{result.riskArea}</span>
+                    <span className="font-semibold text-slate-700">{displayResult.riskArea}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-slate-500">Assertion:</span>
-                    <span className="font-semibold text-slate-700">{result.assertion}</span>
+                    <span className="font-semibold text-slate-700">{displayResult.assertion}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-slate-500">Likelihood / Magnitude:</span>
-                    <span className="font-semibold text-slate-700">{result.likelihood} / {result.magnitude}</span>
+                    <span className="font-semibold text-slate-700">{displayResult.likelihood} / {displayResult.magnitude}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-slate-500">Inherent Risk Score:</span>
-                    <span className="font-semibold text-slate-700">{result.inherentRiskScore}/25</span>
+                    <span className="font-semibold text-slate-700">{displayResult.inherentRiskScore}/25</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-slate-500">Inherent Risk Level:</span>
-                    <span className={`font-semibold ${result.inherentRiskLevel === 'High' ? 'text-red-600' : result.inherentRiskLevel === 'Medium' ? 'text-amber-600' : 'text-emerald-600'}`}>
-                      {result.inherentRiskLevel}
+                    <span className={`font-semibold ${displayResult.inherentRiskLevel === 'High' ? 'text-red-600' : displayResult.inherentRiskLevel === 'Medium' ? 'text-amber-600' : 'text-emerald-600'}`}>
+                      {displayResult.inherentRiskLevel}
                     </span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-slate-500">Control Risk Score:</span>
-                    <span className="font-semibold text-slate-700">{result.controlRiskScore}</span>
+                    <span className="font-semibold text-slate-700">{displayResult.controlRiskScore}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-slate-500">Significant Risk:</span>
-                    <span className={`font-semibold ${result.significantRisk ? 'text-red-600' : 'text-emerald-600'}`}>
-                      {result.significantRisk ? 'Yes' : 'No'}
+                    <span className={`font-semibold ${displayResult.significantRisk ? 'text-red-600' : 'text-emerald-600'}`}>
+                      {displayResult.significantRisk ? 'Yes' : 'No'}
                     </span>
                   </div>
                 </div>
               </div>
 
-              {/* Identified Risk Factors */}
               <div>
                 <h5 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Key Risk Factors</h5>
                 <div className="space-y-2">
-                  {result.keyRiskFactors.map((risk, idx) => (
+                  {displayResult.keyRiskFactors.map((risk, idx) => (
                     <div key={idx} className="flex items-start gap-2.5 rounded-xl border border-slate-100 bg-white p-3">
                       <div className="mt-0.5 rounded bg-brand-50 p-1 text-brand-600">
                         <FileText className="h-3.5 w-3.5" />
@@ -572,11 +613,10 @@ export default function RiskAssessment({ activeProject, onRiskGenerated }) {
                 </div>
               </div>
 
-              {/* Suggested Focus Areas */}
               <div>
                 <h5 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Suggested Audit Focus Areas</h5>
                 <ul className="space-y-1.5 text-xs text-slate-600">
-                  {result.focusAreas.map((proc, idx) => (
+                  {displayResult.focusAreas.map((proc, idx) => (
                     <li key={idx} className="flex gap-2">
                       <ChevronRight className="h-4 w-4 text-brand-500 shrink-0 mt-0.5" />
                       <span>{proc}</span>
@@ -585,13 +625,12 @@ export default function RiskAssessment({ activeProject, onRiskGenerated }) {
                 </ul>
               </div>
 
-              {/* Fraud Risk Indicators */}
-              <div className={`rounded-xl border p-4 ${result.score >= 40 ? 'bg-red-50/35 border-red-100' : 'bg-slate-50 border-slate-200'}`}>
-                <h5 className={`text-xs font-bold uppercase tracking-wider mb-2.5 flex items-center gap-1.5 ${result.score >= 40 ? 'text-red-700' : 'text-slate-700'}`}>
+              <div className={`rounded-xl border p-4 ${displayResult.score >= 40 ? 'bg-red-50/35 border-red-100' : 'bg-slate-50 border-slate-200'}`}>
+                <h5 className={`text-xs font-bold uppercase tracking-wider mb-2.5 flex items-center gap-1.5 ${displayResult.score >= 40 ? 'text-red-700' : 'text-slate-700'}`}>
                   <AlertTriangle className="h-4 w-4" /> Key Fraud Risk Indicators (ISA 240)
                 </h5>
-                <ul className={`space-y-1.5 text-xs ${result.score >= 40 ? 'text-red-700' : 'text-slate-600'}`}>
-                  {result.fraudIndicators.map((fi, idx) => (
+                <ul className={`space-y-1.5 text-xs ${displayResult.score >= 40 ? 'text-red-700' : 'text-slate-600'}`}>
+                  {displayResult.fraudIndicators.map((fi, idx) => (
                     <li key={idx} className="flex gap-2 items-start">
                       <span className="shrink-0 font-bold">•</span>
                       <span>{fi}</span>
@@ -600,7 +639,6 @@ export default function RiskAssessment({ activeProject, onRiskGenerated }) {
                 </ul>
               </div>
 
-              {/* Database Save Notices */}
               {saveStatus && (
                 <AlertMessage type="success" title="Risk Assessment Saved" message={saveStatus} />
               )}
@@ -611,8 +649,7 @@ export default function RiskAssessment({ activeProject, onRiskGenerated }) {
             </div>
           )}
 
-          {/* Action Footer */}
-          {result && (
+          {displayResult && (
             <div className="mt-6 border-t border-slate-100 pt-4 flex items-center justify-between text-xs">
               <span className="text-slate-400">Simulation Status: Valuation Complete</span>
               <button 
@@ -624,6 +661,75 @@ export default function RiskAssessment({ activeProject, onRiskGenerated }) {
             </div>
           )}
         </div>
+      </div>
+
+      <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+        <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+          <div className="flex items-center gap-2">
+            <History className="h-5 w-5 text-slate-400" />
+            <h3 className="font-display text-base font-bold text-slate-900">Saved Risk Assessments</h3>
+          </div>
+          <span className="text-xs text-slate-400">{savedAssessments.length} saved</span>
+        </div>
+
+        {loadingHistory ? (
+          <div className="flex items-center justify-center py-8">
+            <LoadingSpinner label="Loading saved assessments..." className="h-5 w-5" />
+          </div>
+        ) : savedAssessments.length === 0 ? (
+          <div className="py-8 text-center text-xs text-slate-400">
+            <Target className="h-8 w-8 text-slate-300 mx-auto mb-2" />
+            <p>No saved risk assessments for this project yet.</p>
+            <p className="text-[10px] text-slate-300 mt-1">Generate one above and it will appear here.</p>
+          </div>
+        ) : (
+          <div className="mt-4 space-y-2 max-h-[400px] overflow-y-auto">
+            {savedAssessments.map((a) => (
+              <div
+                key={a.id}
+                onClick={() => viewSavedAssessment(a)}
+                className={`rounded-xl border p-3 transition-all cursor-pointer hover:shadow-sm ${
+                  viewingAssessment?.id === a.id
+                    ? 'border-brand-300 bg-brand-50/30 ring-1 ring-brand-200'
+                    : 'border-slate-100 hover:bg-slate-50/50'
+                }`}
+              >
+                <div className="flex items-center justify-between gap-4">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2">
+                      <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[9px] font-bold ${
+                        a.risk_level === 'High' ? 'bg-red-100 text-red-700' :
+                        a.risk_level === 'Medium' ? 'bg-amber-100 text-amber-700' :
+                        'bg-emerald-100 text-emerald-700'
+                      }`}>
+                        {a.risk_level}
+                      </span>
+                      <span className="text-xs font-semibold text-slate-700">{a.risk_area || 'N/A'}</span>
+                      {a.significant_risk && (
+                        <span className="inline-flex items-center gap-1 rounded-full bg-red-50 px-1.5 py-0.5 text-[8px] font-bold text-red-600">
+                          Significant
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-3 mt-1 text-[10px] text-slate-500">
+                      <span className="flex items-center gap-1">
+                        <Calendar className="h-3 w-3" />
+                        {new Date(a.created_at).toLocaleDateString()}
+                      </span>
+                      <span>Score: {a.risk_score}</span>
+                      <span>Lik: {a.likelihood}/5</span>
+                      <span>Mag: {a.magnitude}/5</span>
+                      <span>Assertion: {a.assertion || 'N/A'}</span>
+                    </div>
+                  </div>
+                  <div className="shrink-0">
+                    <Eye className="h-4 w-4 text-slate-400" />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

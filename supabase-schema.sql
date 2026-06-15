@@ -72,6 +72,7 @@ alter table public.risk_assessments add column if not exists control_risk_score 
 alter table public.risk_assessments add column if not exists significant_risk boolean default false;
 alter table public.risk_assessments add column if not exists risk_area text;
 alter table public.risk_assessments add column if not exists assertion text;
+alter table public.risk_assessments add column if not exists fraud_indicators jsonb;
 
 -- 4. Create Audit Checklists Table
 create table if not exists public.audit_checklists (

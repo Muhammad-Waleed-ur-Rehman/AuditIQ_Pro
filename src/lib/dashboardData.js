@@ -128,6 +128,25 @@ export async function fetchActiveEngagementsCount(userId) {
   }
 }
 
+export async function fetchProjectRiskAssessments(userId, projectId) {
+  if (!isSupabaseConfigured || !supabase) return [];
+  if (!userId) throw new Error('User not authenticated');
+  if (!projectId) return [];
+  try {
+    const { data, error } = await supabase
+      .from('risk_assessments')
+      .select('*')
+      .eq('user_id', userId)
+      .eq('project_id', projectId)
+      .order('created_at', { ascending: false });
+    if (error) throw error;
+    return data || [];
+  } catch (err) {
+    console.warn('Failed to load project risk assessments:', err);
+    throw new Error(getSupabaseErrorMessage(err));
+  }
+}
+
 export async function fetchAiQueriesCount(userId) {
   if (!isSupabaseConfigured || !supabase || !userId) return 0;
   try {
