@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import Papa from 'papaparse';
 import { 
   ResponsiveContainer, 
@@ -18,17 +18,15 @@ import {
   FileSpreadsheet, 
   AlertTriangle, 
   CheckCircle2, 
-  TrendingUp, 
-  TrendingDown, 
   Upload, 
   RefreshCw, 
-  HelpCircle,
   Download,
-  AlertCircle
+  AlertCircle,
+  Sparkles
 } from 'lucide-react';
 import { validateCSVColumns, analyzeFinancialData } from '../lib/financialRatios';
 import { isSupabaseConfigured, supabase, getSupabaseErrorMessage } from '../lib/supabaseClient';
-import { invokeGemini } from '../lib/invokeGemini';
+
 import { useAuth } from '../context/AuthContext';
 import { buildRedFlagExplanationPrompt } from '../lib/auditPrompts';
 import LoadingSpinner from './LoadingSpinner';
@@ -590,7 +588,7 @@ export default function FinancialAnalyzer() {
                   </p>
                 </div>
               );
-            } catch (e) {
+            } catch {
               return <pre className="text-xs bg-slate-50 p-4 rounded-xl overflow-auto">{redFlagInsight}</pre>;
             }
           })()}

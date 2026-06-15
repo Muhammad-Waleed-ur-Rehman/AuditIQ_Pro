@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { generateWorkingPaper } from '../lib/auditEngine';
-import { isSupabaseConfigured, supabase, getSupabaseErrorMessage } from '../lib/supabaseClient';
+import { isSupabaseConfigured, supabase } from '../lib/supabaseClient';
 import { invokeGemini } from '../lib/invokeGemini';
 import { useAuth } from '../context/AuthContext';
-import { ClipboardCopy, Download, FileSpreadsheet, Check, Sparkles, AlertCircle } from 'lucide-react';
+import { ClipboardCopy, Download, FileSpreadsheet, Check, Sparkles } from 'lucide-react';
 import LoadingSpinner from './LoadingSpinner';
 import AlertMessage from './AlertMessage';
 
@@ -17,20 +17,6 @@ export default function WorkingPaperGenerator({ activeProject = null, onWpGenera
   const [copied, setCopied] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [statusMessage, setStatusMessage] = useState('');
-
-  const parseStructuredResponse = (responseText) => {
-    const cleaned = (responseText || '').replace(/```json|```/gi, '').trim();
-
-    try {
-      return JSON.parse(cleaned);
-    } catch {
-      const jsonMatch = cleaned.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
-        return JSON.parse(jsonMatch[0]);
-      }
-      return null;
-    }
-  };
 
   const handleGenerate = async () => {
     if (!observation.trim()) {

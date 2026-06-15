@@ -1,4 +1,4 @@
-import { supabase, isSupabaseConfigured, getSupabaseErrorMessage } from './supabaseClient';
+import { supabase, isSupabaseConfigured } from './supabaseClient';
 
 /**
  * Reusable helper to invoke the 'gemini-audit' Supabase Edge Function.
@@ -37,7 +37,7 @@ export async function invokeGemini({ mode, prompt, projectContext, additionalDat
       try {
         const body = await error.context?.json?.();
         detailMsg = body?.error || body?.details || '';
-      } catch (e) {
+      } catch {
         // Body might not be JSON or already consumed
       }
 

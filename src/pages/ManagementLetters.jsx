@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
-import { AlertCircle, Copy, Sparkles, ShieldCheck } from 'lucide-react';
-import { isSupabaseConfigured, supabase, getSupabaseErrorMessage } from '../lib/supabaseClient';
+import { useState } from 'react';
+import { Copy, ShieldCheck } from 'lucide-react';
+import { isSupabaseConfigured, supabase } from '../lib/supabaseClient';
 import { invokeGemini } from '../lib/invokeGemini';
 import { useAuth } from '../context/AuthContext';
 import { buildManagementLetterPrompt } from '../lib/auditPrompts';

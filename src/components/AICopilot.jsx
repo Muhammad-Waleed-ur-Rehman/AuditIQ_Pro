@@ -1,6 +1,6 @@
-import React, { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useId } from 'react';
 import { generateCopilotResponse } from '../lib/auditEngine';
-import { isSupabaseConfigured, supabase, getSupabaseErrorMessage } from '../lib/supabaseClient';
+import { isSupabaseConfigured, supabase } from '../lib/supabaseClient';
 import { invokeGemini } from '../lib/invokeGemini';
 import { useAuth } from '../context/AuthContext';
 import { Send, Bot, User, AlertCircle, HelpCircle } from 'lucide-react';
@@ -31,6 +31,8 @@ I am trained on standard auditing regulations (IFRS, US GAAP, ISA, PCAOB). Ask m
   const [errorMessage, setErrorMessage] = useState('');
   
   const messagesEndRef = useRef(null);
+  const idPrefix = useId();
+  const msgCounter = useRef(0);
 
   // Auto-scroll to bottom of conversation
   useEffect(() => {
@@ -45,8 +47,9 @@ I am trained on standard auditing regulations (IFRS, US GAAP, ISA, PCAOB). Ask m
       return;
     }
 
+    msgCounter.current += 1;
     const userMsg = {
-      id: Date.now(),
+      id: `${idPrefix}-${msgCounter.current}`,
       sender: 'user',
       text: safeText,
     };

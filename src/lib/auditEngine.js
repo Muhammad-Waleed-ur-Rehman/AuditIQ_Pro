@@ -111,8 +111,7 @@ export const generateRiskAssessment = (inputs) => {
 // ==========================================
 // 2. FINANCIAL STATEMENT ANALYZER
 // ==========================================
-export const generateFinancialAnalysis = (statementType, year) => {
-  const priorYear = parseInt(year) - 1;
+export const generateFinancialAnalysis = (statementType) => {
   
   if (statementType === 'Balance Sheet') {
     const data = [
@@ -283,7 +282,6 @@ export const generateWorkingPaper = (area, grade) => {
 // 4. AUDIT PROCEDURE GENERATOR
 // ==========================================
 export const generateAuditProgram = (area, assertions) => {
-  const auditSteps = [];
   
   const baseSteps = {
     'Cash': [

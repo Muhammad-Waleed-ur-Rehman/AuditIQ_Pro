@@ -1,6 +1,6 @@
-import React, { useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { BookOpen, Search, ShieldCheck } from 'lucide-react';
-import { isSupabaseConfigured, supabase, getSupabaseErrorMessage } from '../lib/supabaseClient';
+import { isSupabaseConfigured, supabase } from '../lib/supabaseClient';
 import { invokeGemini } from '../lib/invokeGemini';
 import { buildKnowledgeHubPrompt } from '../lib/auditPrompts';
 

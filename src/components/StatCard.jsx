@@ -1,5 +1,3 @@
-import React from 'react';
-
 export default function StatCard({ icon: Icon, label, value, detail, accent = 'brand', onClick }) {
   const accentClasses = {
     brand: 'bg-brand-50 text-brand-600',

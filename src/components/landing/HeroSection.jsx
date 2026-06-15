@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import { ArrowDown, ArrowRight, Shield, Sparkles } from 'lucide-react';
 
-export default function HeroSection({ onEnterDashboard }) {
+export default function HeroSection() {
   return (
     <section id="top" className="grid gap-10 rounded-[36px] border border-white/10 bg-white/6 p-6 shadow-2xl shadow-cyan-950/30 backdrop-blur-xl md:grid-cols-[1.1fr_0.9fr] md:p-10 lg:min-h-[82vh] lg:items-center">
       <div className="space-y-6" data-reveal>

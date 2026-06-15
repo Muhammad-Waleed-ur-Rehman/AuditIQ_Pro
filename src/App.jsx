@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { BrowserRouter, Routes, Route, useNavigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
@@ -34,19 +34,6 @@ const defaultStats = {
   promptLibrary: 0,
   financialRedFlags: 0
 };
-
-function PlaceholderPage({ title, subtitle }) {
-  return (
-    <section className="p-6 md:p-10">
-      <div className="rounded-[32px] border border-slate-200 bg-white p-8 shadow-xl shadow-slate-200/60">
-        <p className="text-sm uppercase tracking-[0.35em] text-brand-600">Protected route</p>
-        <h2 className="mt-4 text-3xl font-semibold text-slate-900">{title}</h2>
-        <p className="mt-3 max-w-2xl text-slate-600">{subtitle}</p>
-        <div className="mt-6 rounded-3xl border border-slate-200 bg-slate-50 p-5 text-sm text-slate-600">This route is now protected by the auth layer and uses the same dashboard shell as the existing AuditIQ Pro workspace.</div>
-      </div>
-    </section>
-  );
-}
 
 function DashboardShell({ page }) {
   const navigate = useNavigate();

@@ -1,5 +1,3 @@
-import React from 'react';
-
 export default function LoadingSpinner({ label = 'Loading...', className = '' }) {
   return (
     <div className={`flex items-center gap-2 text-xs font-semibold text-slate-600 ${className}`}>

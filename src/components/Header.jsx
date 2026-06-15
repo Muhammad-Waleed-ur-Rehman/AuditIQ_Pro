@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Menu, Search, Bell, Cpu, Database, X, CheckCircle2, AlertTriangle, Info, Sun, Moon, Monitor } from 'lucide-react';
 import { isSupabaseConfigured } from '../lib/supabaseClient';
 import { useTheme } from '../context/ThemeContext';

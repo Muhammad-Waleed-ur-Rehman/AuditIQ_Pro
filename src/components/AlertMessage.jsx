@@ -1,4 +1,3 @@
-import React from 'react';
 import { AlertCircle, CheckCircle2, Info } from 'lucide-react';
 
 export default function AlertMessage({ type = 'info', title, message, className = '' }) {

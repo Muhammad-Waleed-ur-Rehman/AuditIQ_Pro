@@ -79,7 +79,7 @@ const screenshots = [
   },
 ];
 
-function MockBrowserFrame({ children, gradient, gradientBg }) {
+function MockBrowserFrame({ children, gradientBg }) {
   return (
     <div className="overflow-hidden rounded-xl border border-white/10 bg-slate-900/80 shadow-lg shadow-black/30 backdrop-blur-sm">
       {/* Browser chrome */}
