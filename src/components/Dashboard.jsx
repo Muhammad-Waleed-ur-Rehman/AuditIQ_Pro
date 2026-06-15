@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import {
   FolderGit,
   ShieldX,
+  ShieldAlert,
   FileCheck,
   Bot,
   ArrowUpRight,
@@ -10,7 +11,6 @@ import {
   AlertCircle,
   AlertTriangle,
   Gauge,
-  Database,
   Sparkles,
   FileText,
   PenSquare,
@@ -19,11 +19,9 @@ import {
   Trash2,
   Plus,
   AlertOctagon,
-  ChevronRight,
   ListTodo,
   Target,
-  Activity,
-  Eye
+  Activity
 } from 'lucide-react';
 import { isSupabaseConfigured, supabase, getSupabaseErrorMessage } from '../lib/supabaseClient';
 import { useAuth } from '../context/AuthContext';
@@ -34,7 +32,6 @@ import {
   fetchHighRiskCount,
   fetchLatestRiskScore,
   fetchAllRiskAssessments,
-  fetchProjectsCount,
   fetchActiveEngagementsCount,
   fetchAiQueriesCount
 } from '../lib/dashboardData';
@@ -177,7 +174,7 @@ export default function Dashboard({
     setHeatmapGrid(placeAssessmentsOnGrid(grid, riskAssessmentsData || []));
 
     setIsLoadingMetrics(false);
-  }, [user?.id, activeProject?.id, setStats]);
+  }, [user, activeProject?.id, setStats]);
 
   useEffect(() => {
     loadDashboardData();
@@ -1007,7 +1004,7 @@ export default function Dashboard({
                     </React.Fragment>
                   ))}
                   <div className="col-span-1" />
-                  {['Mag 1', 'Mag 2', 'Mag 3', 'Mag 4', 'Mag 5'].map((l, i) => (
+                  {['Mag 1', 'Mag 2', 'Mag 3', 'Mag 4', 'Mag 5'].map((l) => (
                     <div key={l} className="text-center text-[8px] text-slate-400 pt-1">{l}</div>
                   ))}
                 </div>

@@ -11,8 +11,7 @@ import {
   FileText, 
   ChevronRight, 
   Gauge, 
-  AlertTriangle, 
-  AlertCircle,
+  AlertTriangle,
   Database,
   History,
   Calendar,
@@ -44,12 +43,7 @@ export default function RiskAssessment({ activeProject, onRiskGenerated }) {
   const [loadingHistory, setLoadingHistory] = useState(false);
   const [viewingAssessment, setViewingAssessment] = useState(null);
 
-  useEffect(() => {
-    if (!isSupabaseConfigured || !supabase || !user?.id || !activeProject?.id) return;
-    loadSavedAssessments();
-  }, [activeProject?.id, user?.id]);
-
-  const loadSavedAssessments = async () => {
+  const loadSavedAssessments = React.useCallback(async () => {
     setLoadingHistory(true);
     try {
       const { data, error } = await supabase
@@ -66,7 +60,12 @@ export default function RiskAssessment({ activeProject, onRiskGenerated }) {
     } finally {
       setLoadingHistory(false);
     }
-  };
+  }, [user, activeProject]);
+
+  useEffect(() => {
+    if (!isSupabaseConfigured || !supabase || !user?.id || !activeProject?.id) return;
+    loadSavedAssessments();
+  }, [loadSavedAssessments]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
