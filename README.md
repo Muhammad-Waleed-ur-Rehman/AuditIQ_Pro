@@ -16,7 +16,7 @@ AuditIQ Pro is a React + Vite audit productivity platform for internal and exter
 - Working paper generator with observation/criteria/condition/cause/effect/recommendation framework
 - Audit procedure generator with risk-area-driven assertions, procedures, sampling approach
 - Management letter and planning memo generators with AI-powered drafts
-- AI Copilot with chat history, prompt categories, and Gemini-powered responses via Supabase Edge Functions
+- AI Copilot with chat history, prompt categories, and Groq-powered responses (via `llama-3.3-70b-versatile`) through Supabase Edge Functions
 - Knowledge Hub and Prompt Library for reusable reference content
 - User profile page with editable fields (job title, department, phone, location, certifications, bio)
 - Theme support with dark mode via ThemeContext
@@ -34,11 +34,20 @@ auditiq-pro/
 │   │   ├── auth/
 │   │   │   └── ProtectedRoute.jsx
 │   │   ├── landing/
+│   │   │   ├── AICopilotDemo.jsx
+│   │   │   ├── AIFeaturesShowcase.jsx
+│   │   │   ├── FAQSection.jsx
 │   │   │   ├── FeatureSection.jsx
+│   │   │   ├── Footer.jsx
 │   │   │   ├── HeroSection.jsx
+│   │   │   ├── HowItWorks.jsx
 │   │   │   ├── LandingNavbar.jsx
 │   │   │   ├── ParticleBackground.jsx
-│   │   │   └── ScrollSection.jsx
+│   │   │   ├── ProblemSolution.jsx
+│   │   │   ├── ProductShowcase.jsx
+│   │   │   ├── RealProductPreview.jsx
+│   │   │   ├── ScrollSection.jsx
+│   │   │   └── WhoItsFor.jsx
 │   │   ├── AICopilot.jsx
 │   │   ├── AlertMessage.jsx
 │   │   ├── AuditProcedureGenerator.jsx
@@ -86,8 +95,7 @@ auditiq-pro/
 │   ├── functions/
 │   │   └── gemini-audit/
 │   │       └── index.ts
-│   ├── schema.sql
-│   └── .temp/
+│   └── schema.sql
 ├── supabase-schema.sql
 ├── .env.example
 ├── .gitignore
@@ -135,7 +143,7 @@ auditiq-pro/
 5. (Optional) For AI features, deploy the Edge Function:
    ```bash
    supabase functions deploy gemini-audit
-   supabase secrets set GEMINI_API_KEY=your_google_key
+   supabase secrets set GROQ_API_KEY=your_groq_key
    ```
 
 ## Key features detail
@@ -208,5 +216,5 @@ Dashboard metrics are fetched in parallel with per-query error isolation — a f
 - AI-generated outputs are for assistance only. This platform is **not** a replacement for professional auditor judgment.
 - All AI-generated working papers and risk assessments must be reviewed and signed off by a qualified professional.
 - No final audit opinion should be generated solely by the AI.
-- Gemini free tier usage limits and rate throttling may apply.
+- Groq API free tier usage limits and rate throttling may apply.
 - Financial CSV uploads must match the required column structure documented in the Financial Analyzer UI.
